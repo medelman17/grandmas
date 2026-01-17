@@ -10,6 +10,7 @@ interface ChatInputProps {
   hasMessages: boolean;
   isDebating: boolean;
   hasQueuedDebates: boolean;
+  debatePauseReason: string;
   onContinueDebate: () => void;
   onEndDebate: () => void;
 }
@@ -158,6 +159,7 @@ export function ChatInput({
   hasMessages,
   isDebating,
   hasQueuedDebates,
+  debatePauseReason,
   onContinueDebate,
   onEndDebate,
 }: ChatInputProps) {
@@ -243,7 +245,9 @@ export function ChatInput({
                 "shadow-[0_0_20px_rgba(245,158,11,0.1)]"
               )}
             >
-              <span className="text-xs text-zinc-500 mr-2">The grandmas are debating...</span>
+              <span className="text-xs text-zinc-500 mr-2">
+                {debatePauseReason || "The grandmas are debating..."}
+              </span>
               <motion.button
                 onClick={onContinueDebate}
                 disabled={!hasQueuedDebates}
@@ -259,7 +263,7 @@ export function ChatInput({
                 )}
               >
                 <FlameIcon className="w-4 h-4" />
-                <span>Let them cook</span>
+                <span>{debatePauseReason ? "Keep listening" : "Let them cook"}</span>
               </motion.button>
 
               <motion.button
@@ -274,7 +278,7 @@ export function ChatInput({
                 )}
               >
                 <GavelIcon className="w-4 h-4" />
-                <span>Order!</span>
+                <span>{debatePauseReason ? "I've heard enough" : "Order!"}</span>
               </motion.button>
             </motion.div>
           ) : (

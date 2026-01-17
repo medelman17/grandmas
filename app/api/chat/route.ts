@@ -33,12 +33,18 @@ export async function POST(req: Request) {
 
         const reactionPrompt = `${DEBATE_COORDINATOR_PROMPT}
 
-ADDITIONAL CONTEXT: This is a debate reaction check. A grandma just spoke and you need to determine if another grandma would want to jump in and respond.
+ADDITIONAL CONTEXT: This is a debate reaction check. A grandma just spoke and you need to determine if another grandma would want to jump in.
 
-The grandma who can NOT respond (because they just spoke): ${GRANDMAS[lastSpeaker].name}
+The grandma who can NOT respond (just spoke): ${GRANDMAS[lastSpeaker].name}
 ${lastTarget ? `The grandma being addressed: ${GRANDMAS[lastTarget].name}` : ""}
 
-Consider: Would any OTHER grandma be triggered enough to respond? Remember these grandmas are SHORT-FUSED. But also don't force it - if the statement doesn't warrant a response, say so.`;
+These grandmas CAN'T RESIST jumping in. Look for ANY of these triggers:
+- A grandma's values were attacked (food vs books, emotion vs logic, faith vs business)
+- Someone said something another grandma finds weak, cold, or naive
+- A grandma was left out and would HATE not having the last word
+- There's an opening for a devastating one-liner
+
+Be trigger-happy! These grandmas live for the drama.`;
 
         const result = streamText({
           model,
@@ -119,7 +125,7 @@ Analyze for disagreements and respond with JSON only.`,
       model,
       system: systemPrompt,
       messages,
-      maxOutputTokens: 300,
+      maxOutputTokens: 150,
     });
 
     return result.toTextStreamResponse();

@@ -89,4 +89,8 @@ export interface ChatRequest {
 export interface CoordinatorResponse {
   hasDisagreement: boolean;
   debates: DebateInstruction[];
+  /** Coordinator suggests human check-in at natural pause points */
+  shouldPause?: boolean;
+  /** Reason for pause (for display to user) */
+  pauseReason?: string;
 }

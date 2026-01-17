@@ -42,6 +42,7 @@ export function CounselChat() {
     isDebating,
     isLoading,
     hasQueuedDebates,
+    debatePauseReason,
     sendQuestion,
     continueDebate,
     endDebate,
@@ -180,6 +181,7 @@ export function CounselChat() {
         hasMessages={messages.length > 0}
         isDebating={isDebating}
         hasQueuedDebates={hasQueuedDebates}
+        debatePauseReason={debatePauseReason}
         onContinueDebate={continueDebate}
         onEndDebate={endDebate}
       />
