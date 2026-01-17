@@ -192,7 +192,8 @@ Analyze for disagreements and respond with JSON only.`,
         switch (chunk.type) {
           case "text-delta":
             // Format: 0:{text}\n (text-delta)
-            controller.enqueue(encoder.encode(`0:${JSON.stringify(chunk.textDelta)}\n`));
+            // Note: AI SDK v5+ uses 'delta' not 'textDelta'
+            controller.enqueue(encoder.encode(`0:${JSON.stringify(chunk.delta)}\n`));
             break;
           case "tool-call":
             // Format: 9:{toolCallId, toolName}\n (tool-call)
