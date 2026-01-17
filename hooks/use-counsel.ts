@@ -77,6 +77,7 @@ export function useCounsel() {
       let fullContent = "";
 
       try {
+        console.log(`[${grandmaId}] Starting fetch...`);
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -96,18 +97,29 @@ export function useCounsel() {
           }),
         });
 
+        console.log(`[${grandmaId}] Response status: ${response.status}`);
+
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+          const errorText = await response.text();
+          console.error(`[${grandmaId}] Error response:`, errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
 
         const reader = response.body?.getReader();
-        if (!reader) throw new Error("No reader available");
+        if (!reader) {
+          console.error(`[${grandmaId}] No reader available`);
+          throw new Error("No reader available");
+        }
 
         const decoder = new TextDecoder();
+        console.log(`[${grandmaId}] Starting stream read...`);
 
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            console.log(`[${grandmaId}] Stream complete. Total: ${fullContent.length} chars`);
+            break;
+          }
 
           const text = decoder.decode(value, { stream: true });
 
