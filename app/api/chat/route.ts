@@ -1,9 +1,13 @@
 import { streamText } from "ai";
+import { gateway } from "@ai-sdk/gateway";
 import { GRANDMAS, DEBATE_COORDINATOR_PROMPT, getDebateResponsePrompt } from "@/lib/grandmas";
 import { ChatRequest, GrandmaId } from "@/lib/types";
 
 // Use edge runtime for faster cold starts
 export const runtime = "edge";
+
+// Use Vercel AI Gateway for model access
+const model = gateway("anthropic/claude-sonnet-4");
 
 export async function POST(req: Request) {
   try {
@@ -37,7 +41,7 @@ ${lastTarget ? `The grandma being addressed: ${GRANDMAS[lastTarget].name}` : ""}
 Consider: Would any OTHER grandma be triggered enough to respond? Remember these grandmas are SHORT-FUSED. But also don't force it - if the statement doesn't warrant a response, say so.`;
 
         const result = streamText({
-          model: "anthropic/claude-sonnet-4",
+          model,
           system: reactionPrompt,
           messages: [
             {
@@ -71,7 +75,7 @@ Would any grandma (other than ${GRANDMAS[lastSpeaker].name}) want to respond to 
 
       // Use plain string model ID - AI SDK auto-routes through AI Gateway
       const result = streamText({
-        model: "anthropic/claude-sonnet-4",
+        model,
         system: DEBATE_COORDINATOR_PROMPT,
         messages: [
           {
@@ -112,7 +116,7 @@ Analyze for disagreements and respond with JSON only.`,
 
     // Use plain string model ID - AI SDK auto-routes through AI Gateway
     const result = streamText({
-      model: "anthropic/claude-sonnet-4",
+      model,
       system: systemPrompt,
       messages,
       maxOutputTokens: 300,
