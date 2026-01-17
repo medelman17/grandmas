@@ -70,6 +70,10 @@ export interface ChatRequest {
   context?: {
     replyingTo?: GrandmaId;
     allResponses?: Record<GrandmaId, string>;
+    // For debate reaction checking
+    debateReaction?: boolean;
+    lastSpeaker?: GrandmaId;
+    lastTarget?: GrandmaId;
   };
 }
 

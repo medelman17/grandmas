@@ -18,8 +18,42 @@ export async function POST(req: Request) {
       );
     }
 
-    // Coordinator mode: Analyze all responses for disagreements
+    // Coordinator mode: Analyze responses for disagreements
     if (mode === "coordinator") {
+      // Check if this is a debate reaction check (single message) or initial check (all responses)
+      if (context?.debateReaction) {
+        // Analyze a single debate message for reactions
+        const lastSpeaker = context.lastSpeaker as GrandmaId;
+        const lastTarget = context.lastTarget as GrandmaId | undefined;
+        const messageContent = messages.find((m) => m.role === "user")?.content || "";
+
+        const reactionPrompt = `${DEBATE_COORDINATOR_PROMPT}
+
+ADDITIONAL CONTEXT: This is a debate reaction check. A grandma just spoke and you need to determine if another grandma would want to jump in and respond.
+
+The grandma who can NOT respond (because they just spoke): ${GRANDMAS[lastSpeaker].name}
+${lastTarget ? `The grandma being addressed: ${GRANDMAS[lastTarget].name}` : ""}
+
+Consider: Would any OTHER grandma be triggered enough to respond? Remember these grandmas are SHORT-FUSED. But also don't force it - if the statement doesn't warrant a response, say so.`;
+
+        const result = streamText({
+          model: "anthropic/claude-sonnet-4",
+          system: reactionPrompt,
+          messages: [
+            {
+              role: "user",
+              content: `${messageContent}
+
+Would any grandma (other than ${GRANDMAS[lastSpeaker].name}) want to respond to this? Analyze and respond with JSON only.`,
+            },
+          ],
+          maxOutputTokens: 500,
+        });
+
+        return result.toTextStreamResponse();
+      }
+
+      // Initial debate check - analyze all responses
       const allResponses = context?.allResponses;
       if (!allResponses) {
         return new Response(
