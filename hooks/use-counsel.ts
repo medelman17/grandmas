@@ -29,6 +29,16 @@ function randomDelay(min: number, max: number): number {
 }
 
 /**
+ * Validate that a debate instruction has valid grandma IDs
+ */
+function isValidDebate(debate: DebateInstruction): boolean {
+  return (
+    GRANDMA_IDS.includes(debate.responderId) &&
+    GRANDMA_IDS.includes(debate.targetId)
+  );
+}
+
+/**
  * Rounds before asking user if they want to keep listening
  * This allows natural debate flow with human check-ins at good stopping points
  */
@@ -61,6 +71,8 @@ export function useCounsel() {
   const [recentDebateMessages, setRecentDebateMessages] = useState<
     Array<{ grandmaId: GrandmaId; content: string; targetId?: GrandmaId }>
   >([]);
+  const [showSummaryPrompt, setShowSummaryPrompt] = useState(false);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   // Track active streaming controllers for cleanup
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
@@ -329,6 +341,13 @@ export function useCounsel() {
 
       while (currentDebates.length > 0 && round < ROUNDS_BEFORE_CHECKIN && !coordinatorSaysPause) {
         const debate = currentDebates.shift()!;
+
+        // Skip invalid debates (coordinator may return malformed responses)
+        if (!isValidDebate(debate)) {
+          console.warn("Skipping invalid debate instruction:", debate);
+          continue;
+        }
+
         round++;
         setDebateRound(round);
 
@@ -383,10 +402,10 @@ export function useCounsel() {
           if (reactionResult.shouldPause) {
             coordinatorSaysPause = true;
             coordinatorPauseReason = reactionResult.pauseReason || "The grandmas seem to be winding down...";
-            if (reactionResult.debate) {
+            if (reactionResult.debate && isValidDebate(reactionResult.debate)) {
               currentDebates.push(reactionResult.debate);
             }
-          } else if (reactionResult.debate) {
+          } else if (reactionResult.debate && isValidDebate(reactionResult.debate)) {
             // Someone wants to respond! Add to queue
             currentDebates.push(reactionResult.debate);
           }
@@ -496,7 +515,9 @@ export function useCounsel() {
       await new Promise((r) => setTimeout(r, randomDelay(1500, 3000)));
 
       // Check for debates
-      const debates = await checkForDebates(question, responses);
+      const rawDebates = await checkForDebates(question, responses);
+      // Filter out any invalid debates from coordinator
+      const debates = rawDebates.filter(isValidDebate);
 
       if (debates.length > 0) {
         setIsDebating(true);
@@ -585,9 +606,9 @@ export function useCounsel() {
   }, []);
 
   /**
-   * End the debate and generate meeting summary
+   * End the debate and show summary prompt
    */
-  const endDebate = useCallback(async () => {
+  const endDebate = useCallback(() => {
     // Cancel any ongoing requests
     abortControllersRef.current.forEach((controller) => controller.abort());
     abortControllersRef.current.clear();
@@ -595,7 +616,7 @@ export function useCounsel() {
     setDebateQueue([]);
     setIsDebating(false);
     setTypingGrandmas([]);
-    setIsLoading(true);
+    setDebatePauseReason("");
 
     // Add gavel message
     setMessages((prev) => [
@@ -608,7 +629,17 @@ export function useCounsel() {
       },
     ]);
 
-    // Generate and add meeting summary
+    // Show prompt asking if user wants a summary
+    setShowSummaryPrompt(true);
+  }, []);
+
+  /**
+   * Generate and add meeting summary (called from prompt)
+   */
+  const requestMeetingSummary = useCallback(async () => {
+    setShowSummaryPrompt(false);
+    setIsGeneratingSummary(true);
+
     const transcript = generateTranscript(messages);
     if (transcript) {
       const summary = await generateSummary(transcript);
@@ -625,8 +656,15 @@ export function useCounsel() {
       }
     }
 
-    setIsLoading(false);
+    setIsGeneratingSummary(false);
   }, [messages, generateTranscript, generateSummary]);
+
+  /**
+   * Dismiss the summary prompt without generating
+   */
+  const dismissSummaryPrompt = useCallback(() => {
+    setShowSummaryPrompt(false);
+  }, []);
 
   /**
    * Clear all messages and reset state
@@ -641,6 +679,8 @@ export function useCounsel() {
     setDebateRound(0);
     setRecentDebateMessages([]);
     setIsLoading(false);
+    setShowSummaryPrompt(false);
+    setIsGeneratingSummary(false);
   }, []);
 
   return {
@@ -652,9 +692,13 @@ export function useCounsel() {
     roundsBeforeCheckin: ROUNDS_BEFORE_CHECKIN,
     hasQueuedDebates: debateQueue.length > 0,
     debatePauseReason,
+    showSummaryPrompt,
+    isGeneratingSummary,
     sendQuestion,
     continueDebate,
     endDebate,
+    requestMeetingSummary,
+    dismissSummaryPrompt,
     clearChat,
   };
 }

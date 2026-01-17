@@ -4,11 +4,14 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { GRANDMAS } from "@/lib/grandmas";
 import { GrandmaId } from "@/lib/types";
+import { Markdown } from "./markdown";
 
 interface GrandmaMessageProps {
   content: string;
   grandmaId: GrandmaId;
   replyingTo?: GrandmaId;
+  /** The content of the message being replied to (for quote preview) */
+  replyingToContent?: string;
   isStreaming?: boolean;
 }
 
@@ -16,6 +19,7 @@ export function GrandmaMessage({
   content,
   grandmaId,
   replyingTo,
+  replyingToContent,
   isStreaming,
 }: GrandmaMessageProps) {
   const grandma = GRANDMAS[grandmaId];
@@ -67,12 +71,6 @@ export function GrandmaMessage({
           <span className={cn("text-sm font-medium", grandma.colors.primary)}>
             {grandma.name}
           </span>
-          {target && (
-            <span className="text-xs text-zinc-500">
-              → replying to{" "}
-              <span className={target.colors.primary}>{target.name}</span>
-            </span>
-          )}
           {isStreaming && (
             <motion.div className="flex gap-1">
               {[0, 1, 2].map((i) => (
@@ -95,6 +93,42 @@ export function GrandmaMessage({
             </motion.div>
           )}
         </div>
+
+        {/* Quote preview for replies - iMessage style */}
+        {target && replyingToContent && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="relative mb-2"
+          >
+            {/* Thread connector line */}
+            <div
+              className={cn(
+                "absolute left-3 -bottom-2 w-0.5 h-2 rounded-full opacity-40",
+                target.colors.gradient.replace("from-", "bg-").split(" ")[0]
+              )}
+            />
+
+            {/* Quote bubble */}
+            <div
+              className={cn(
+                "relative pl-3 py-2 pr-3 rounded-xl rounded-bl-sm",
+                "bg-white/[0.02] border border-white/[0.04]",
+                "before:absolute before:left-0 before:top-0 before:bottom-0",
+                "before:w-0.5 before:rounded-full",
+                target.colors.gradient.replace("from-", "before:bg-").split(" ")[0]
+              )}
+            >
+              <span className={cn("text-[10px] font-medium block mb-0.5 opacity-70", target.colors.primary)}>
+                {target.name}
+              </span>
+              <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">
+                {replyingToContent}
+              </p>
+            </div>
+          </motion.div>
+        )}
 
         {/* Content */}
         <div
@@ -120,11 +154,13 @@ export function GrandmaMessage({
             }}
           />
 
-          <p className={cn("relative text-sm leading-relaxed", grandma.colors.text)}>
-            {content || (
+          <div className={cn("relative text-sm leading-relaxed", grandma.colors.text)}>
+            {content ? (
+              <Markdown content={content} className="[&>p]:my-0" />
+            ) : (
               <span className="text-zinc-500 italic">Thinking...</span>
             )}
-          </p>
+          </div>
         </div>
       </div>
     </motion.div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useCounsel } from "@/hooks/use-counsel";
 import { CouncilHeader } from "./council-header";
@@ -10,6 +10,9 @@ import { TypingIndicators } from "./typing-indicators";
 import { ChatInput } from "./chat-input";
 import { GRANDMA_IDS, GRANDMAS } from "@/lib/grandmas";
 import { cn } from "@/lib/utils";
+import { CounselMessage, GrandmaId } from "@/lib/types";
+import { Markdown } from "./markdown";
+import { SummaryPrompt } from "./summary-prompt";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -43,12 +46,34 @@ export function CounselChat() {
     isLoading,
     hasQueuedDebates,
     debatePauseReason,
+    showSummaryPrompt,
+    isGeneratingSummary,
     sendQuestion,
     continueDebate,
     endDebate,
+    requestMeetingSummary,
+    dismissSummaryPrompt,
   } = useCounsel();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Find the most recent message from a specific grandma before a given index.
+   * Used to get the content being replied to for the quote preview.
+   */
+  const findReplyingToContent = useCallback(
+    (replyingTo: GrandmaId, beforeIndex: number): string | undefined => {
+      // Search backwards from the message before the current one
+      for (let i = beforeIndex - 1; i >= 0; i--) {
+        const msg = messages[i];
+        if (msg.type === "grandma" && msg.grandmaId === replyingTo && msg.content) {
+          return msg.content;
+        }
+      }
+      return undefined;
+    },
+    [messages]
+  );
 
   // Auto-scroll to bottom on new messages
   // Use requestAnimationFrame to batch scroll updates when multiple state changes
@@ -123,7 +148,7 @@ export function CounselChat() {
           )}
 
           {/* Messages - wrapped in message-item for content-visibility optimization */}
-          {messages.map((message) => {
+          {messages.map((message, index) => {
             if (message.type === "user") {
               return (
                 <div key={message.id} className="message-item">
@@ -133,12 +158,18 @@ export function CounselChat() {
             }
 
             if (message.type === "grandma" && message.grandmaId) {
+              // Get the content of the message being replied to for quote preview
+              const replyingToContent = message.replyingTo
+                ? findReplyingToContent(message.replyingTo, index)
+                : undefined;
+
               return (
                 <div key={message.id} className="message-item">
                   <GrandmaMessage
                     content={message.content}
                     grandmaId={message.grandmaId}
                     replyingTo={message.replyingTo}
+                    replyingToContent={replyingToContent}
                     isStreaming={message.isStreaming}
                   />
                 </div>
@@ -153,11 +184,15 @@ export function CounselChat() {
                   className={cn(
                     "message-item",
                     isMeetingSummary
-                      ? "py-4 px-4 text-sm text-zinc-300 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-purple-500/20 rounded-2xl shadow-[0_0_30px_rgba(168,85,247,0.15)] whitespace-pre-wrap text-left"
+                      ? "py-4 px-4 text-sm text-zinc-300 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-purple-500/20 rounded-2xl shadow-[0_0_30px_rgba(168,85,247,0.15)] text-left"
                       : "text-center py-2 text-sm text-zinc-500 border-y border-white/5 bg-white/[0.02]"
                   )}
                 >
-                  {message.content}
+                  {isMeetingSummary ? (
+                    <Markdown content={message.content} />
+                  ) : (
+                    message.content
+                  )}
                 </div>
               );
             }
@@ -169,6 +204,17 @@ export function CounselChat() {
           {typingGrandmas.length > 0 && (
             <div className="py-2">
               <TypingIndicators typingGrandmas={typingGrandmas} />
+            </div>
+          )}
+
+          {/* Summary prompt after gaveling */}
+          {(showSummaryPrompt || isGeneratingSummary) && (
+            <div className="py-4">
+              <SummaryPrompt
+                onRequestSummary={requestMeetingSummary}
+                onDismiss={dismissSummaryPrompt}
+                isGenerating={isGeneratingSummary}
+              />
             </div>
           )}
 
