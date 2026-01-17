@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, startTransition } from "react";
 import {
   CounselMessage,
   TypingState,
@@ -328,14 +328,16 @@ export function useCounsel() {
         const readDelay = readingDelays[debate.responderId];
         await new Promise((r) => setTimeout(r, randomDelay(readDelay.min, readDelay.max)));
 
-        // Show typing indicator
-        setTypingGrandmas([
-          {
-            grandmaId: debate.responderId,
-            replyingTo: debate.targetId,
-            startedAt: Date.now(),
-          },
-        ]);
+        // Show typing indicator (non-urgent visual update)
+        startTransition(() => {
+          setTypingGrandmas([
+            {
+              grandmaId: debate.responderId,
+              replyingTo: debate.targetId,
+              startedAt: Date.now(),
+            },
+          ]);
+        });
 
         // Stream the debate response
         const responseContent = await streamGrandmaResponse(
@@ -420,12 +422,15 @@ export function useCounsel() {
       };
 
       // Stagger the typing indicator appearances
+      // Use startTransition since these are non-urgent visual updates
       for (const grandmaId of GRANDMA_IDS) {
         setTimeout(() => {
-          setTypingGrandmas((prev) => [
-            ...prev,
-            { grandmaId, startedAt: Date.now() },
-          ]);
+          startTransition(() => {
+            setTypingGrandmas((prev) => [
+              ...prev,
+              { grandmaId, startedAt: Date.now() },
+            ]);
+          });
         }, typingAppearanceDelays[grandmaId]);
       }
 

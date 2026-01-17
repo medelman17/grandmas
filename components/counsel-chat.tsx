@@ -26,8 +26,13 @@ export function CounselChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new messages
+  // Use requestAnimationFrame to batch scroll updates when multiple state changes
+  // happen in quick succession (e.g., 5 typing indicators appearing)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const frame = requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    });
+    return () => cancelAnimationFrame(frame);
   }, [messages, typingGrandmas]);
 
   return (
@@ -64,21 +69,26 @@ export function CounselChat() {
             </div>
           )}
 
-          {/* Messages */}
+          {/* Messages - wrapped in message-item for content-visibility optimization */}
           {messages.map((message) => {
             if (message.type === "user") {
-              return <UserMessage key={message.id} content={message.content} />;
+              return (
+                <div key={message.id} className="message-item">
+                  <UserMessage content={message.content} />
+                </div>
+              );
             }
 
             if (message.type === "grandma" && message.grandmaId) {
               return (
-                <GrandmaMessage
-                  key={message.id}
-                  content={message.content}
-                  grandmaId={message.grandmaId}
-                  replyingTo={message.replyingTo}
-                  isStreaming={message.isStreaming}
-                />
+                <div key={message.id} className="message-item">
+                  <GrandmaMessage
+                    content={message.content}
+                    grandmaId={message.grandmaId}
+                    replyingTo={message.replyingTo}
+                    isStreaming={message.isStreaming}
+                  />
+                </div>
               );
             }
 
@@ -87,7 +97,7 @@ export function CounselChat() {
                 <div
                   key={message.id}
                   className={cn(
-                    "text-center py-2 text-sm text-gray-500",
+                    "message-item text-center py-2 text-sm text-gray-500",
                     "border-y border-gray-200 bg-gray-100/50"
                   )}
                 >

@@ -9,3 +9,11 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Performance optimization: Skip rendering off-screen messages
+ * content-visibility: auto defers layout/paint for messages not in viewport
+ * contain-intrinsic-size provides estimated height to prevent layout shift */
+.message-item {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 80px;
+}
