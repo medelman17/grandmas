@@ -72,7 +72,7 @@ export interface DebateInstruction {
 export interface ChatRequest {
   messages: { role: "user" | "assistant"; content: string }[];
   grandmaId?: GrandmaId;
-  mode: "single" | "coordinator";
+  mode: "single" | "coordinator" | "summary";
   context?: {
     replyingTo?: GrandmaId;
     allResponses?: Record<GrandmaId, string>;
@@ -80,6 +80,8 @@ export interface ChatRequest {
     debateReaction?: boolean;
     lastSpeaker?: GrandmaId;
     lastTarget?: GrandmaId;
+    // For meeting summary generation
+    conversationTranscript?: string;
   };
 }
 

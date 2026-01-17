@@ -146,12 +146,15 @@ export function CounselChat() {
             }
 
             if (message.type === "system") {
+              const isMeetingSummary = message.content.includes("COUNCIL MEETING MINUTES");
               return (
                 <div
                   key={message.id}
                   className={cn(
-                    "message-item text-center py-2 text-sm text-zinc-500",
-                    "border-y border-white/5 bg-white/[0.02]"
+                    "message-item",
+                    isMeetingSummary
+                      ? "py-4 px-4 text-sm text-zinc-300 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-purple-500/20 rounded-2xl shadow-[0_0_30px_rgba(168,85,247,0.15)] whitespace-pre-wrap text-left"
+                      : "text-center py-2 text-sm text-zinc-500 border-y border-white/5 bg-white/[0.02]"
                   )}
                 >
                   {message.content}

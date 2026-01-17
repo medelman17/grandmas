@@ -1,6 +1,6 @@
 import { streamText } from "ai";
 import { gateway } from "@ai-sdk/gateway";
-import { GRANDMAS, DEBATE_COORDINATOR_PROMPT, getDebateResponsePrompt } from "@/lib/grandmas";
+import { GRANDMAS, DEBATE_COORDINATOR_PROMPT, MEETING_SUMMARY_PROMPT, getDebateResponsePrompt } from "@/lib/grandmas";
 import { ChatRequest, GrandmaId } from "@/lib/types";
 
 // Use edge runtime for faster cold starts
@@ -96,6 +96,31 @@ Analyze for disagreements and respond with JSON only.`,
           },
         ],
         maxOutputTokens: 500,
+      });
+
+      return result.toTextStreamResponse();
+    }
+
+    // Summary mode: Generate meeting minutes from conversation
+    if (mode === "summary") {
+      const transcript = context?.conversationTranscript;
+      if (!transcript) {
+        return new Response(
+          JSON.stringify({ error: "conversationTranscript required for summary mode" }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      const result = streamText({
+        model,
+        system: MEETING_SUMMARY_PROMPT,
+        messages: [
+          {
+            role: "user",
+            content: `Please generate meeting minutes for this Council of Grandmas session:\n\n${transcript}`,
+          },
+        ],
+        maxOutputTokens: 600,
       });
 
       return result.toTextStreamResponse();

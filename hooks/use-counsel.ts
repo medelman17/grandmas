@@ -527,9 +527,67 @@ export function useCounsel() {
   }, [debateQueue, isLoading, runAutomaticDebates]);
 
   /**
-   * End the debate early
+   * Generate a conversation transcript for the summary
    */
-  const endDebate = useCallback(() => {
+  const generateTranscript = useCallback((msgs: CounselMessage[]): string => {
+    return msgs
+      .map((msg) => {
+        if (msg.type === "user") {
+          return `USER: ${msg.content}`;
+        }
+        if (msg.type === "grandma" && msg.grandmaId) {
+          const grandma = GRANDMAS[msg.grandmaId];
+          const prefix = msg.replyingTo
+            ? `${grandma.name} (replying to ${GRANDMAS[msg.replyingTo].name})`
+            : grandma.name;
+          return `${prefix}: ${msg.content}`;
+        }
+        return null;
+      })
+      .filter(Boolean)
+      .join("\n\n");
+  }, []);
+
+  /**
+   * Generate meeting summary from the conversation
+   */
+  const generateSummary = useCallback(async (transcript: string): Promise<string> => {
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [],
+          mode: "summary",
+          context: { conversationTranscript: transcript },
+        }),
+      });
+
+      if (!response.ok) return "";
+
+      const reader = response.body?.getReader();
+      if (!reader) return "";
+
+      const decoder = new TextDecoder();
+      let summary = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        summary += decoder.decode(value, { stream: true });
+      }
+
+      return summary;
+    } catch (error) {
+      console.error("Error generating summary:", error);
+      return "";
+    }
+  }, []);
+
+  /**
+   * End the debate and generate meeting summary
+   */
+  const endDebate = useCallback(async () => {
     // Cancel any ongoing requests
     abortControllersRef.current.forEach((controller) => controller.abort());
     abortControllersRef.current.clear();
@@ -537,9 +595,9 @@ export function useCounsel() {
     setDebateQueue([]);
     setIsDebating(false);
     setTypingGrandmas([]);
-    setIsLoading(false);
+    setIsLoading(true);
 
-    // Add system message
+    // Add gavel message
     setMessages((prev) => [
       ...prev,
       {
@@ -549,7 +607,26 @@ export function useCounsel() {
         timestamp: Date.now(),
       },
     ]);
-  }, []);
+
+    // Generate and add meeting summary
+    const transcript = generateTranscript(messages);
+    if (transcript) {
+      const summary = await generateSummary(transcript);
+      if (summary) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: generateId(),
+            type: "system",
+            content: summary,
+            timestamp: Date.now(),
+          },
+        ]);
+      }
+    }
+
+    setIsLoading(false);
+  }, [messages, generateTranscript, generateSummary]);
 
   /**
    * Clear all messages and reset state
