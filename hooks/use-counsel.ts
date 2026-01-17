@@ -29,6 +29,18 @@ function randomDelay(min: number, max: number): number {
 }
 
 /**
+ * Each grandma has different "typing speed" characteristics
+ * This affects how long their typing indicator shows before message appears
+ */
+const GRANDMA_RESPONSE_DELAYS: Record<GrandmaId, { min: number; max: number }> = {
+  "nana-ruth": { min: 200, max: 600 },      // Nana Ruth is measured and thoughtful
+  "abuela-carmen": { min: 100, max: 400 },  // Abuela Carmen is quick and passionate
+  "ba-nguyen": { min: 300, max: 800 },      // Bà Nguyen takes her time, considered
+  "grandma-edith": { min: 150, max: 500 },  // Grandma Edith has steady rhythm
+  "bibi-amara": { min: 400, max: 1000 },    // Bibi Amara is dramatic, takes longest
+};
+
+/**
  * Hook for managing the counsel of grandmas chat
  */
 export function useCounsel() {
@@ -55,25 +67,7 @@ export function useCounsel() {
       const messageId = generateId();
       abortControllersRef.current.set(messageId, controller);
 
-      // Add initial message (streaming state)
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: messageId,
-          type: "grandma",
-          content: "",
-          grandmaId,
-          replyingTo,
-          timestamp: Date.now(),
-          isStreaming: true,
-        },
-      ]);
-
-      // Remove from typing
-      setTypingGrandmas((prev) =>
-        prev.filter((t) => t.grandmaId !== grandmaId)
-      );
-
+      // Keep typing indicator visible - don't add message until ready
       let fullContent = "";
 
       try {
@@ -114,6 +108,7 @@ export function useCounsel() {
         const decoder = new TextDecoder();
         console.log(`[${grandmaId}] Starting stream read...`);
 
+        // Collect full response (don't display until complete - like iMessage)
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
@@ -122,36 +117,62 @@ export function useCounsel() {
           }
 
           const text = decoder.decode(value, { stream: true });
-
           if (text) {
             fullContent += text;
-            // Update message content
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === messageId ? { ...m, content: fullContent } : m
-              )
-            );
           }
         }
+
+        // Add personality-based delay before showing message (simulates send lag)
+        const delays = GRANDMA_RESPONSE_DELAYS[grandmaId];
+        const postDelay = randomDelay(delays.min, delays.max);
+        await new Promise((r) => setTimeout(r, postDelay));
+
+        // Remove typing indicator
+        setTypingGrandmas((prev) =>
+          prev.filter((t) => t.grandmaId !== grandmaId)
+        );
+
+        // Now add the complete message all at once (like iMessage)
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: messageId,
+            type: "grandma",
+            content: fullContent,
+            grandmaId,
+            replyingTo,
+            timestamp: Date.now(),
+            isStreaming: false,
+          },
+        ]);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
-          // Request was cancelled
+          // Request was cancelled - clean up typing indicator
+          setTypingGrandmas((prev) =>
+            prev.filter((t) => t.grandmaId !== grandmaId)
+          );
           return fullContent;
         }
         console.error(`Error streaming ${grandmaId}:`, error);
         fullContent = `*${GRANDMAS[grandmaId].name} is having technical difficulties*`;
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === messageId ? { ...m, content: fullContent } : m
-          )
+
+        // Remove typing and show error message
+        setTypingGrandmas((prev) =>
+          prev.filter((t) => t.grandmaId !== grandmaId)
         );
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: messageId,
+            type: "grandma",
+            content: fullContent,
+            grandmaId,
+            replyingTo,
+            timestamp: Date.now(),
+            isStreaming: false,
+          },
+        ]);
       } finally {
-        // Mark as done streaming
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === messageId ? { ...m, isStreaming: false } : m
-          )
-        );
         abortControllersRef.current.delete(messageId);
       }
 
@@ -232,25 +253,41 @@ export function useCounsel() {
       };
       setMessages((prev) => [...prev, userMessage]);
 
-      // Show staggered typing indicators
-      const typingDelays: number[] = GRANDMA_IDS.map(() =>
-        randomDelay(150, 350)
-      );
+      // Show staggered typing indicators with personality-based timing
+      // Each grandma "notices" the question at different times
+      const typingAppearanceDelays: Record<GrandmaId, number> = {
+        "abuela-carmen": randomDelay(100, 300),  // Abuela Carmen is quick to engage
+        "nana-ruth": randomDelay(200, 500),      // Nana Ruth is attentive
+        "grandma-edith": randomDelay(300, 700),  // Grandma Edith takes a moment
+        "ba-nguyen": randomDelay(400, 900),      // Bà Nguyen is more deliberate
+        "bibi-amara": randomDelay(600, 1200),    // Bibi Amara makes an entrance
+      };
 
-      for (let i = 0; i < GRANDMA_IDS.length; i++) {
+      // Stagger the typing indicator appearances
+      for (const grandmaId of GRANDMA_IDS) {
         setTimeout(() => {
           setTypingGrandmas((prev) => [
             ...prev,
-            { grandmaId: GRANDMA_IDS[i], startedAt: Date.now() },
+            { grandmaId, startedAt: Date.now() },
           ]);
-        }, typingDelays.slice(0, i + 1).reduce((a, b) => a + b, 0));
+        }, typingAppearanceDelays[grandmaId]);
       }
 
-      // Fire parallel requests with varied start delays
+      // Fire parallel requests with personality-based "thinking" delays
+      // Wider variance creates more syncopated message arrival
+      const thinkingDelays: Record<GrandmaId, { min: number; max: number }> = {
+        "abuela-carmen": { min: 300, max: 800 },   // Quick thinker, passionate
+        "nana-ruth": { min: 500, max: 1200 },      // Thoughtful, composed
+        "grandma-edith": { min: 400, max: 1000 },  // Steady, reliable
+        "ba-nguyen": { min: 700, max: 1500 },      // Deliberate, wise
+        "bibi-amara": { min: 800, max: 2000 },     // Takes her time, dramatic
+      };
+
       const responsePromises: Promise<{ id: GrandmaId; content: string }>[] =
         GRANDMA_IDS.map(async (grandmaId) => {
-          // Add variance to when each grandma "starts typing"
-          await new Promise((r) => setTimeout(r, randomDelay(400, 1200)));
+          // Add personality-based variance to when each grandma starts
+          const delays = thinkingDelays[grandmaId];
+          await new Promise((r) => setTimeout(r, randomDelay(delays.min, delays.max)));
           const content = await streamGrandmaResponse(question, grandmaId);
           return { id: grandmaId, content };
         });
@@ -291,6 +328,18 @@ export function useCounsel() {
     const [nextDebate, ...remainingDebates] = debateQueue;
     setDebateQueue(remainingDebates);
 
+    // Personality-based delay before showing typing indicator
+    // (time to "read" the other grandma's message)
+    const readingDelays: Record<GrandmaId, { min: number; max: number }> = {
+      "abuela-carmen": { min: 200, max: 500 },  // Quick to jump in
+      "nana-ruth": { min: 300, max: 700 },      // Reads carefully
+      "grandma-edith": { min: 250, max: 600 },  // Steady pace
+      "ba-nguyen": { min: 400, max: 900 },      // Considers before responding
+      "bibi-amara": { min: 500, max: 1100 },    // Dramatic pause
+    };
+    const readDelay = readingDelays[nextDebate.responderId];
+    await new Promise((r) => setTimeout(r, randomDelay(readDelay.min, readDelay.max)));
+
     // Show typing indicator for the responder
     setTypingGrandmas([
       {
@@ -299,9 +348,6 @@ export function useCounsel() {
         startedAt: Date.now(),
       },
     ]);
-
-    // Small delay for natural feel
-    await new Promise((r) => setTimeout(r, randomDelay(500, 1000)));
 
     // Stream the debate response
     await streamGrandmaResponse(
