@@ -200,8 +200,8 @@ export function CounselChat() {
             return null;
           })}
 
-          {/* Typing indicators */}
-          {typingGrandmas.length > 0 && (
+          {/* Debate typing indicators - inline with messages */}
+          {typingGrandmas.length > 0 && typingGrandmas.some((t) => t.replyingTo) && (
             <div className="py-2">
               <TypingIndicators typingGrandmas={typingGrandmas} />
             </div>
@@ -222,6 +222,13 @@ export function CounselChat() {
           <div ref={messagesEndRef} />
         </div>
       </div>
+
+      {/* Initial typing indicators - pinned above input */}
+      {typingGrandmas.length > 0 && !typingGrandmas.some((t) => t.replyingTo) && (
+        <div className="px-4 py-3 flex justify-center">
+          <TypingIndicators typingGrandmas={typingGrandmas} />
+        </div>
+      )}
 
       {/* Input / Debate Controls */}
       <ChatInput
