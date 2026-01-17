@@ -174,6 +174,10 @@ Analyze for disagreements and respond with JSON only.`,
     const tools = validatedUserId ? createMemoryTools(validatedUserId, grandmaId) : undefined;
 
     // Use plain string model ID - AI SDK auto-routes through AI Gateway
+    // Track tool events in a queue that we'll interleave with text
+    const toolEvents: string[] = [];
+    const encoder = new TextEncoder();
+
     const result = streamText({
       model,
       system: systemPrompt,
@@ -182,38 +186,40 @@ Analyze for disagreements and respond with JSON only.`,
       // Allow tool calling loops only if tools are available
       ...(tools && { stopWhen: stepCountIs(3) }),
       maxOutputTokens: 150,
-    });
-
-    // Create custom data stream that exposes tool events for memory indicators
-    // This emits SSE events: text-delta, tool-call, tool-result
-    const encoder = new TextEncoder();
-    const transformStream = new TransformStream({
-      transform(chunk, controller) {
-        switch (chunk.type) {
-          case "text-delta":
-            // Format: 0:{text}\n (text-delta)
-            // Note: AI SDK v5+ uses 'delta' not 'textDelta'
-            controller.enqueue(encoder.encode(`0:${JSON.stringify(chunk.delta)}\n`));
-            break;
-          case "tool-call":
-            // Format: 9:{toolCallId, toolName}\n (tool-call)
-            controller.enqueue(encoder.encode(`9:${JSON.stringify({
-              toolCallId: chunk.toolCallId,
-              toolName: chunk.toolName,
-            })}\n`));
-            break;
-          case "tool-result":
-            // Format: a:{toolCallId}\n (tool-result)
-            controller.enqueue(encoder.encode(`a:${JSON.stringify({
-              toolCallId: chunk.toolCallId,
-            })}\n`));
-            break;
-          // Ignore other event types (step-start, step-finish, etc.)
+      onChunk: ({ chunk }) => {
+        // Capture tool events as they happen
+        if (chunk.type === "tool-call") {
+          toolEvents.push(`9:${JSON.stringify({
+            toolCallId: chunk.toolCallId,
+            toolName: chunk.toolName,
+          })}\n`);
+        } else if (chunk.type === "tool-result") {
+          toolEvents.push(`a:${JSON.stringify({
+            toolCallId: chunk.toolCallId,
+          })}\n`);
         }
       },
     });
 
-    return new Response(result.fullStream.pipeThrough(transformStream), {
+    // Create a custom stream that interleaves tool events with text
+    const transformStream = new TransformStream({
+      transform(textChunk, controller) {
+        // First, flush any pending tool events
+        while (toolEvents.length > 0) {
+          controller.enqueue(encoder.encode(toolEvents.shift()!));
+        }
+        // Then send the text chunk
+        controller.enqueue(encoder.encode(`0:${JSON.stringify(textChunk)}\n`));
+      },
+      flush(controller) {
+        // Flush remaining tool events at the end
+        while (toolEvents.length > 0) {
+          controller.enqueue(encoder.encode(toolEvents.shift()!));
+        }
+      },
+    });
+
+    return new Response(result.textStream.pipeThrough(transformStream), {
       headers: { "Content-Type": "text/plain; charset=utf-8" },
     });
   } catch (error) {
