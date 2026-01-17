@@ -20,6 +20,12 @@ export interface GrandmaConfig {
     bg: string;
     text: string;
     border: string;
+    /** Glow shadow for dark mode effects */
+    glow: string;
+    /** Subtle surface background for dark mode */
+    surface: string;
+    /** Primary accent color for dark mode */
+    primary: string;
   };
   systemPrompt: string;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import { useCounsel } from "@/hooks/use-counsel";
 import { CouncilHeader } from "./council-header";
 import { UserMessage } from "./user-message";
@@ -10,6 +11,30 @@ import { DebateControls } from "./debate-controls";
 import { ChatInput } from "./chat-input";
 import { GRANDMA_IDS, GRANDMAS } from "@/lib/grandmas";
 import { cn } from "@/lib/utils";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+} as const;
+
+const avatarVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring" as const,
+      stiffness: 400,
+      damping: 15,
+    },
+  },
+};
 
 export function CounselChat() {
   const {
@@ -36,7 +61,7 @@ export function CounselChat() {
   }, [messages, typingGrandmas]);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen ambient-gradient relative noise-overlay">
       {/* Header */}
       <CouncilHeader isDebating={isDebating} />
 
@@ -46,26 +71,54 @@ export function CounselChat() {
           {/* Empty state */}
           {messages.length === 0 && (
             <div className="text-center py-16">
-              <div className="flex justify-center gap-2 mb-6">
-                {GRANDMA_IDS.map((id) => (
-                  <span
-                    key={id}
-                    className="text-3xl"
-                    role="img"
-                    aria-label={GRANDMAS[id].name}
-                  >
-                    {GRANDMAS[id].emoji}
-                  </span>
-                ))}
-              </div>
-              <h2 className="text-xl font-medium text-gray-800 mb-2">
+              <motion.div
+                className="flex justify-center gap-3 mb-8"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {GRANDMA_IDS.map((id) => {
+                  const grandma = GRANDMAS[id];
+                  return (
+                    <motion.div
+                      key={id}
+                      variants={avatarVariants}
+                      className={cn(
+                        "w-12 h-12 rounded-full flex items-center justify-center",
+                        "bg-gradient-to-br shadow-lg",
+                        grandma.colors.gradient,
+                        grandma.colors.glow
+                      )}
+                    >
+                      <span
+                        className="text-xl"
+                        role="img"
+                        aria-label={grandma.name}
+                      >
+                        {grandma.emoji}
+                      </span>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+              <motion.h2
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-xl font-medium text-white mb-3"
+              >
                 The council awaits your question
-              </h2>
-              <p className="text-gray-500 text-sm max-w-md mx-auto">
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="text-zinc-400 text-sm max-w-md mx-auto"
+              >
                 Five wise grandmas with very different perspectives are ready to
                 give you advice. Ask them anything about life, love, career, or
                 that thing you&apos;re definitely overthinking.
-              </p>
+              </motion.p>
             </div>
           )}
 
@@ -97,8 +150,8 @@ export function CounselChat() {
                 <div
                   key={message.id}
                   className={cn(
-                    "message-item text-center py-2 text-sm text-gray-500",
-                    "border-y border-gray-200 bg-gray-100/50"
+                    "message-item text-center py-2 text-sm text-zinc-500",
+                    "border-y border-white/5 bg-white/[0.02]"
                   )}
                 >
                   {message.content}

@@ -10,9 +10,12 @@ export const GRANDMAS: Record<GrandmaId, GrandmaConfig> = {
     emoji: "👓",
     colors: {
       gradient: "from-purple-500 to-indigo-600",
-      bg: "bg-purple-50",
-      text: "text-purple-900",
-      border: "border-purple-200",
+      bg: "bg-purple-500/10",
+      text: "text-purple-200",
+      border: "border-purple-500/20",
+      glow: "shadow-[0_0_30px_rgba(168,85,247,0.3)]",
+      surface: "bg-purple-500/5",
+      primary: "text-purple-400",
     },
     systemPrompt: `You are Nana Ruth, a retired English teacher from Brooklyn who taught for 42 years.
 
@@ -44,9 +47,12 @@ Keep responses conversational, 2-4 sentences typically. You're in a group chat w
     emoji: "🌶️",
     colors: {
       gradient: "from-orange-500 to-red-600",
-      bg: "bg-orange-50",
-      text: "text-orange-900",
-      border: "border-orange-200",
+      bg: "bg-orange-500/10",
+      text: "text-orange-200",
+      border: "border-orange-500/20",
+      glow: "shadow-[0_0_30px_rgba(249,115,22,0.3)]",
+      surface: "bg-orange-500/5",
+      primary: "text-orange-400",
     },
     systemPrompt: `You are Abuela Carmen, a 74-year-old former restaurateur from Mexico City who ran a famous family restaurant for 50 years.
 
@@ -78,9 +84,12 @@ Keep responses conversational, 2-4 sentences typically. You're in a group chat w
     emoji: "🪷",
     colors: {
       gradient: "from-emerald-500 to-teal-600",
-      bg: "bg-emerald-50",
-      text: "text-emerald-900",
-      border: "border-emerald-200",
+      bg: "bg-emerald-500/10",
+      text: "text-emerald-200",
+      border: "border-emerald-500/20",
+      glow: "shadow-[0_0_30px_rgba(16,185,129,0.3)]",
+      surface: "bg-emerald-500/5",
+      primary: "text-emerald-400",
     },
     systemPrompt: `You are Bà Nguyen, an 81-year-old grandmother from Saigon who survived the war and immigrated to the US in 1975.
 
@@ -113,9 +122,12 @@ Keep responses SHORT - 1-2 sentences maximum. You're in a group chat with 4 othe
     emoji: "⛪",
     colors: {
       gradient: "from-sky-500 to-blue-600",
-      bg: "bg-sky-50",
-      text: "text-sky-900",
-      border: "border-sky-200",
+      bg: "bg-sky-500/10",
+      text: "text-sky-200",
+      border: "border-sky-500/20",
+      glow: "shadow-[0_0_30px_rgba(14,165,233,0.3)]",
+      surface: "bg-sky-500/5",
+      primary: "text-sky-400",
     },
     systemPrompt: `You are Grandma Edith, a 76-year-old church organist from Minnesota who raised 6 children and has 14 grandchildren.
 
@@ -148,9 +160,12 @@ Keep responses conversational, 2-4 sentences typically. You're in a group chat w
     emoji: "👑",
     colors: {
       gradient: "from-amber-500 to-yellow-600",
-      bg: "bg-amber-50",
-      text: "text-amber-900",
-      border: "border-amber-200",
+      bg: "bg-amber-500/10",
+      text: "text-amber-200",
+      border: "border-amber-500/20",
+      glow: "shadow-[0_0_30px_rgba(245,158,11,0.3)]",
+      surface: "bg-amber-500/5",
+      primary: "text-amber-400",
     },
     systemPrompt: `You are Bibi Amara, a 72-year-old businesswoman from Lagos, Nigeria who built a textile empire from nothing.
 
