@@ -7,7 +7,6 @@ import { CouncilHeader } from "./council-header";
 import { UserMessage } from "./user-message";
 import { GrandmaMessage } from "./grandma-message";
 import { TypingIndicators } from "./typing-indicators";
-import { DebateControls } from "./debate-controls";
 import { ChatInput } from "./chat-input";
 import { GRANDMA_IDS, GRANDMAS } from "@/lib/grandmas";
 import { cn } from "@/lib/utils";
@@ -169,23 +168,21 @@ export function CounselChat() {
             </div>
           )}
 
-          {/* Debate controls */}
-          {isDebating && !isLoading && (
-            <DebateControls
-              onContinue={continueDebate}
-              onEnd={endDebate}
-              isLoading={isLoading}
-              hasQueuedDebates={hasQueuedDebates}
-            />
-          )}
-
           {/* Scroll anchor */}
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Input */}
-      <ChatInput onSubmit={sendQuestion} isLoading={isLoading} hasMessages={messages.length > 0} />
+      {/* Input / Debate Controls */}
+      <ChatInput
+        onSubmit={sendQuestion}
+        isLoading={isLoading}
+        hasMessages={messages.length > 0}
+        isDebating={isDebating}
+        hasQueuedDebates={hasQueuedDebates}
+        onContinueDebate={continueDebate}
+        onEndDebate={endDebate}
+      />
     </div>
   );
 }

@@ -8,6 +8,10 @@ interface ChatInputProps {
   onSubmit: (question: string) => void;
   isLoading: boolean;
   hasMessages: boolean;
+  isDebating: boolean;
+  hasQueuedDebates: boolean;
+  onContinueDebate: () => void;
+  onEndDebate: () => void;
 }
 
 const QUICK_PROMPTS = [
@@ -110,12 +114,61 @@ function SendIcon({ className }: { className?: string }) {
   );
 }
 
-export function ChatInput({ onSubmit, isLoading, hasMessages }: ChatInputProps) {
+function FlameIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M8 14C11 14 13 11.5 13 9C13 6 10 4 10 2C10 2 9 4 8 4C7 4 5 3 5 1C5 1 3 4 3 7C3 10 5 14 8 14Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function GavelIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M10 2L14 6M2 14L6 10M6.5 9.5L9.5 6.5M4 6L10 12"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function ChatInput({
+  onSubmit,
+  isLoading,
+  hasMessages,
+  isDebating,
+  hasQueuedDebates,
+  onContinueDebate,
+  onEndDebate,
+}: ChatInputProps) {
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
 
   // Hide prompts once conversation has started
   const showPrompts = !hasMessages && !isLoading;
+
+  // Show debate controls instead of input when debating and not loading
+  const showDebateControls = isDebating && !isLoading;
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -175,73 +228,132 @@ export function ChatInput({ onSubmit, isLoading, hasMessages }: ChatInputProps) 
           )}
         </AnimatePresence>
 
-        {/* Input form */}
-        <form onSubmit={handleSubmit} className="relative">
-          <div
-            className={cn(
-              "flex gap-3 p-1 rounded-2xl",
-              "bg-white/[0.03] border",
-              "transition-all duration-300",
-              isFocused
-                ? "border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.15)]"
-                : "border-white/[0.08]"
-            )}
-          >
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              placeholder="Ask the grandmas for advice..."
-              disabled={isLoading}
-              rows={1}
+        {/* Debate controls or Input form */}
+        <AnimatePresence mode="wait">
+          {showDebateControls ? (
+            <motion.div
+              key="debate-controls"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
               className={cn(
-                "flex-1 resize-none bg-transparent px-4 py-3",
-                "focus:outline-none",
-                "placeholder:text-zinc-600 text-sm text-white",
-                "transition-all duration-200",
-                isLoading && "opacity-50 cursor-not-allowed"
-              )}
-            />
-            <motion.button
-              type="submit"
-              disabled={!input.trim() || isLoading}
-              whileHover={!input.trim() || isLoading ? {} : { scale: 1.05 }}
-              whileTap={!input.trim() || isLoading ? {} : { scale: 0.95 }}
-              className={cn(
-                "px-5 py-3 rounded-xl font-medium text-sm",
-                "flex items-center gap-2",
-                "transition-all duration-200",
-                !input.trim() || isLoading
-                  ? "bg-white/[0.03] text-zinc-600 cursor-not-allowed"
-                  : "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg shadow-purple-500/25"
+                "flex items-center justify-center gap-3 p-3 rounded-2xl",
+                "bg-white/[0.03] border border-amber-500/20",
+                "shadow-[0_0_20px_rgba(245,158,11,0.1)]"
               )}
             >
-              {isLoading ? (
-                <motion.span
-                  className="flex gap-1"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+              <span className="text-xs text-zinc-500 mr-2">The grandmas are debating...</span>
+              <motion.button
+                onClick={onContinueDebate}
+                disabled={!hasQueuedDebates}
+                whileHover={hasQueuedDebates ? { scale: 1.05 } : {}}
+                whileTap={hasQueuedDebates ? { scale: 0.95 } : {}}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-sm font-medium",
+                  "flex items-center gap-2",
+                  "transition-all duration-200",
+                  !hasQueuedDebates
+                    ? "bg-white/[0.03] text-zinc-600 cursor-not-allowed"
+                    : "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                )}
+              >
+                <FlameIcon className="w-4 h-4" />
+                <span>Let them cook</span>
+              </motion.button>
+
+              <motion.button
+                onClick={onEndDebate}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-sm font-medium",
+                  "flex items-center gap-2",
+                  "bg-white/[0.05] text-zinc-300 border border-white/[0.1]",
+                  "hover:bg-white/[0.08] transition-all duration-200"
+                )}
+              >
+                <GavelIcon className="w-4 h-4" />
+                <span>Order!</span>
+              </motion.button>
+            </motion.div>
+          ) : (
+            <motion.form
+              key="input-form"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              onSubmit={handleSubmit}
+              className="relative"
+            >
+              <div
+                className={cn(
+                  "flex gap-3 p-1 rounded-2xl",
+                  "bg-white/[0.03] border",
+                  "transition-all duration-300",
+                  isFocused
+                    ? "border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.15)]"
+                    : "border-white/[0.08]"
+                )}
+              >
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  placeholder="Ask the grandmas for advice..."
+                  disabled={isLoading}
+                  rows={1}
+                  className={cn(
+                    "flex-1 resize-none bg-transparent px-4 py-3",
+                    "focus:outline-none",
+                    "placeholder:text-zinc-600 text-sm text-white",
+                    "transition-all duration-200",
+                    isLoading && "opacity-50 cursor-not-allowed"
+                  )}
+                />
+                <motion.button
+                  type="submit"
+                  disabled={!input.trim() || isLoading}
+                  whileHover={!input.trim() || isLoading ? {} : { scale: 1.05 }}
+                  whileTap={!input.trim() || isLoading ? {} : { scale: 0.95 }}
+                  className={cn(
+                    "px-5 py-3 rounded-xl font-medium text-sm",
+                    "flex items-center gap-2",
+                    "transition-all duration-200",
+                    !input.trim() || isLoading
+                      ? "bg-white/[0.03] text-zinc-600 cursor-not-allowed"
+                      : "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg shadow-purple-500/25"
+                  )}
                 >
-                  {[0, 1, 2].map((i) => (
+                  {isLoading ? (
                     <motion.span
-                      key={i}
-                      className="w-1.5 h-1.5 rounded-full bg-zinc-500"
-                      animate={{ opacity: [0.4, 1, 0.4] }}
-                      transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-                    />
-                  ))}
-                </motion.span>
-              ) : (
-                <>
-                  <SendIcon className="w-4 h-4" />
-                  <span>Convene</span>
-                </>
-              )}
-            </motion.button>
-          </div>
-        </form>
+                      className="flex gap-1"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                    >
+                      {[0, 1, 2].map((i) => (
+                        <motion.span
+                          key={i}
+                          className="w-1.5 h-1.5 rounded-full bg-zinc-500"
+                          animate={{ opacity: [0.4, 1, 0.4] }}
+                          transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                        />
+                      ))}
+                    </motion.span>
+                  ) : (
+                    <>
+                      <SendIcon className="w-4 h-4" />
+                      <span>Convene</span>
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </motion.form>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
