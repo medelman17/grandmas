@@ -184,7 +184,37 @@ Analyze for disagreements and respond with JSON only.`,
       maxOutputTokens: 150,
     });
 
-    return result.toTextStreamResponse();
+    // Create custom data stream that exposes tool events for memory indicators
+    // This emits SSE events: text-delta, tool-call, tool-result
+    const encoder = new TextEncoder();
+    const transformStream = new TransformStream({
+      transform(chunk, controller) {
+        switch (chunk.type) {
+          case "text-delta":
+            // Format: 0:{text}\n (text-delta)
+            controller.enqueue(encoder.encode(`0:${JSON.stringify(chunk.textDelta)}\n`));
+            break;
+          case "tool-call":
+            // Format: 9:{toolCallId, toolName}\n (tool-call)
+            controller.enqueue(encoder.encode(`9:${JSON.stringify({
+              toolCallId: chunk.toolCallId,
+              toolName: chunk.toolName,
+            })}\n`));
+            break;
+          case "tool-result":
+            // Format: a:{toolCallId}\n (tool-result)
+            controller.enqueue(encoder.encode(`a:${JSON.stringify({
+              toolCallId: chunk.toolCallId,
+            })}\n`));
+            break;
+          // Ignore other event types (step-start, step-finish, etc.)
+        }
+      },
+    });
+
+    return new Response(result.fullStream.pipeThrough(transformStream), {
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
   } catch (error) {
     console.error("Chat API error:", error);
     return new Response(

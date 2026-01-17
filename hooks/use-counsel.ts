@@ -7,6 +7,7 @@ import {
   DebateInstruction,
   GrandmaId,
   CoordinatorResponse,
+  MemoryActivity,
 } from "@/lib/types";
 import { GRANDMAS, GRANDMA_IDS } from "@/lib/grandmas";
 
@@ -18,8 +19,53 @@ function generateId(): string {
 }
 
 /**
- * With toTextStreamResponse(), chunks are plain text - no parsing needed
+ * Parse events from Vercel AI SDK's data stream format.
+ * Format: {type_code}:{json_data}\n
+ * Type codes: 0 = text-delta, 9 = tool-call, a = tool-result
  */
+interface DataStreamEvent {
+  type: "text-delta" | "tool-call" | "tool-result" | "unknown";
+  data: unknown;
+}
+
+function parseDataStreamChunk(chunk: string): DataStreamEvent[] {
+  const events: DataStreamEvent[] = [];
+  const lines = chunk.split("\n").filter((line) => line.trim());
+
+  for (const line of lines) {
+    // Format: {type_code}:{json}
+    const colonIndex = line.indexOf(":");
+    if (colonIndex === -1) continue;
+
+    const typeCode = line.slice(0, colonIndex);
+    const jsonPart = line.slice(colonIndex + 1);
+
+    try {
+      const data = JSON.parse(jsonPart);
+      switch (typeCode) {
+        case "0":
+          // Text delta - extract the text content
+          events.push({ type: "text-delta", data: data });
+          break;
+        case "9":
+          // Tool call
+          events.push({ type: "tool-call", data });
+          break;
+        case "a":
+          // Tool result
+          events.push({ type: "tool-result", data });
+          break;
+        default:
+          // Other event types (step finish, etc.) - ignore
+          break;
+      }
+    } catch {
+      // Not valid JSON - might be partial chunk, skip
+    }
+  }
+
+  return events;
+}
 
 /**
  * Random delay within a range
@@ -74,6 +120,7 @@ export function useCounsel(userId?: string | null) {
   >([]);
   const [showSummaryPrompt, setShowSummaryPrompt] = useState(false);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [memoryActivities, setMemoryActivities] = useState<MemoryActivity[]>([]);
 
   // Track active streaming controllers for cleanup
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
@@ -135,6 +182,7 @@ export function useCounsel(userId?: string | null) {
         console.log(`[${grandmaId}] Starting stream read...`);
 
         // Collect full response (don't display until complete - like iMessage)
+        // Parse data stream events to track memory tool usage
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
@@ -142,9 +190,47 @@ export function useCounsel(userId?: string | null) {
             break;
           }
 
-          const text = decoder.decode(value, { stream: true });
-          if (text) {
-            fullContent += text;
+          const chunk = decoder.decode(value, { stream: true });
+          if (!chunk) continue;
+
+          // Parse the data stream events
+          const events = parseDataStreamChunk(chunk);
+
+          for (const event of events) {
+            if (event.type === "text-delta") {
+              // Accumulate text content
+              fullContent += event.data as string;
+            } else if (event.type === "tool-call") {
+              // Track memory tool activity
+              const toolCall = event.data as { toolCallId: string; toolName: string };
+              if (toolCall.toolName === "search_memories") {
+                setMemoryActivities((prev) => [
+                  ...prev,
+                  {
+                    grandmaId,
+                    type: "searching",
+                    toolCallId: toolCall.toolCallId,
+                    startedAt: Date.now(),
+                  },
+                ]);
+              } else if (toolCall.toolName === "create_memory") {
+                setMemoryActivities((prev) => [
+                  ...prev,
+                  {
+                    grandmaId,
+                    type: "saving",
+                    toolCallId: toolCall.toolCallId,
+                    startedAt: Date.now(),
+                  },
+                ]);
+              }
+            } else if (event.type === "tool-result") {
+              // Remove memory activity when tool completes
+              const toolResult = event.data as { toolCallId: string };
+              setMemoryActivities((prev) =>
+                prev.filter((a) => a.toolCallId !== toolResult.toolCallId)
+              );
+            }
           }
         }
 
@@ -173,18 +259,24 @@ export function useCounsel(userId?: string | null) {
         ]);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
-          // Request was cancelled - clean up typing indicator
+          // Request was cancelled - clean up typing indicator and memory activities
           setTypingGrandmas((prev) =>
             prev.filter((t) => t.grandmaId !== grandmaId)
+          );
+          setMemoryActivities((prev) =>
+            prev.filter((a) => a.grandmaId !== grandmaId)
           );
           return fullContent;
         }
         console.error(`Error streaming ${grandmaId}:`, error);
         fullContent = `*${GRANDMAS[grandmaId].name} is having technical difficulties*`;
 
-        // Remove typing and show error message
+        // Remove typing, memory activities, and show error message
         setTypingGrandmas((prev) =>
           prev.filter((t) => t.grandmaId !== grandmaId)
+        );
+        setMemoryActivities((prev) =>
+          prev.filter((a) => a.grandmaId !== grandmaId)
         );
         setMessages((prev) => [
           ...prev,
@@ -676,6 +768,7 @@ export function useCounsel(userId?: string | null) {
     abortControllersRef.current.clear();
     setMessages([]);
     setTypingGrandmas([]);
+    setMemoryActivities([]);
     setIsDebating(false);
     setDebateQueue([]);
     setDebateRound(0);
@@ -688,6 +781,7 @@ export function useCounsel(userId?: string | null) {
   return {
     messages,
     typingGrandmas,
+    memoryActivities,
     isDebating,
     isLoading,
     debateRound,

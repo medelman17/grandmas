@@ -100,3 +100,14 @@ export interface CoordinatorResponse {
   /** Reason for pause (for display to user) */
   pauseReason?: string;
 }
+
+/**
+ * Active memory tool usage by a grandma
+ * Used to show "remembering..." or "saving memory..." indicators
+ */
+export interface MemoryActivity {
+  grandmaId: GrandmaId;
+  type: "searching" | "saving";
+  toolCallId: string;
+  startedAt: number;
+}

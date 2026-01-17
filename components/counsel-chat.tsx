@@ -8,6 +8,7 @@ import { CouncilHeader } from "./council-header";
 import { UserMessage } from "./user-message";
 import { GrandmaMessage } from "./grandma-message";
 import { TypingIndicators } from "./typing-indicators";
+import { MemoryIndicators } from "./memory-indicator";
 import { ChatInput } from "./chat-input";
 import { GRANDMA_IDS, GRANDMAS } from "@/lib/grandmas";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,7 @@ export function CounselChat() {
   const {
     messages,
     typingGrandmas,
+    memoryActivities,
     isDebating,
     isLoading,
     hasQueuedDebates,
@@ -87,7 +89,7 @@ export function CounselChat() {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     });
     return () => cancelAnimationFrame(frame);
-  }, [messages, typingGrandmas]);
+  }, [messages, typingGrandmas, memoryActivities]);
 
   return (
     <div className="flex flex-col h-screen ambient-gradient relative noise-overlay">
@@ -204,10 +206,15 @@ export function CounselChat() {
             return null;
           })}
 
-          {/* Debate typing indicators - inline with messages */}
-          {typingGrandmas.length > 0 && typingGrandmas.some((t) => t.replyingTo) && (
-            <div className="py-2">
-              <TypingIndicators typingGrandmas={typingGrandmas} />
+          {/* Debate typing/memory indicators - inline with messages */}
+          {(typingGrandmas.some((t) => t.replyingTo) || memoryActivities.length > 0) && (
+            <div className="py-2 space-y-2">
+              {typingGrandmas.length > 0 && typingGrandmas.some((t) => t.replyingTo) && (
+                <TypingIndicators typingGrandmas={typingGrandmas} />
+              )}
+              {memoryActivities.length > 0 && (
+                <MemoryIndicators memoryActivities={memoryActivities} />
+              )}
             </div>
           )}
 
@@ -227,10 +234,13 @@ export function CounselChat() {
         </div>
       </div>
 
-      {/* Initial typing indicators - pinned above input */}
-      {typingGrandmas.length > 0 && !typingGrandmas.some((t) => t.replyingTo) && (
-        <div className="px-4 py-3 flex justify-center">
+      {/* Initial typing/memory indicators - pinned above input */}
+      {(typingGrandmas.length > 0 && !typingGrandmas.some((t) => t.replyingTo)) && (
+        <div className="px-4 py-3 flex flex-col items-center gap-2">
           <TypingIndicators typingGrandmas={typingGrandmas} />
+          {memoryActivities.length > 0 && (
+            <MemoryIndicators memoryActivities={memoryActivities} />
+          )}
         </div>
       )}
 
