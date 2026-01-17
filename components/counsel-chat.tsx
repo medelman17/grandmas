@@ -218,8 +218,8 @@ export function CounselChat() {
             </div>
           )}
 
-          {/* Scroll anchor with buffer space */}
-          <div ref={messagesEndRef} className="h-4" />
+          {/* Scroll anchor with buffer space for input area */}
+          <div ref={messagesEndRef} className="h-24" />
         </div>
       </div>
 
