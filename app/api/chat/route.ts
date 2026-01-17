@@ -1,9 +1,13 @@
 import { streamText } from "ai";
+import { gateway } from "@ai-sdk/gateway";
 import { GRANDMAS, DEBATE_COORDINATOR_PROMPT, getDebateResponsePrompt } from "@/lib/grandmas";
 import { ChatRequest, GrandmaId } from "@/lib/types";
 
 // Use edge runtime for faster cold starts
 export const runtime = "edge";
+
+// Use Vercel AI Gateway for model access
+const model = gateway("anthropic/claude-sonnet-4");
 
 export async function POST(req: Request) {
   try {
@@ -18,8 +22,42 @@ export async function POST(req: Request) {
       );
     }
 
-    // Coordinator mode: Analyze all responses for disagreements
+    // Coordinator mode: Analyze responses for disagreements
     if (mode === "coordinator") {
+      // Check if this is a debate reaction check (single message) or initial check (all responses)
+      if (context?.debateReaction) {
+        // Analyze a single debate message for reactions
+        const lastSpeaker = context.lastSpeaker as GrandmaId;
+        const lastTarget = context.lastTarget as GrandmaId | undefined;
+        const messageContent = messages.find((m) => m.role === "user")?.content || "";
+
+        const reactionPrompt = `${DEBATE_COORDINATOR_PROMPT}
+
+ADDITIONAL CONTEXT: This is a debate reaction check. A grandma just spoke and you need to determine if another grandma would want to jump in and respond.
+
+The grandma who can NOT respond (because they just spoke): ${GRANDMAS[lastSpeaker].name}
+${lastTarget ? `The grandma being addressed: ${GRANDMAS[lastTarget].name}` : ""}
+
+Consider: Would any OTHER grandma be triggered enough to respond? Remember these grandmas are SHORT-FUSED. But also don't force it - if the statement doesn't warrant a response, say so.`;
+
+        const result = streamText({
+          model,
+          system: reactionPrompt,
+          messages: [
+            {
+              role: "user",
+              content: `${messageContent}
+
+Would any grandma (other than ${GRANDMAS[lastSpeaker].name}) want to respond to this? Analyze and respond with JSON only.`,
+            },
+          ],
+          maxOutputTokens: 500,
+        });
+
+        return result.toTextStreamResponse();
+      }
+
+      // Initial debate check - analyze all responses
       const allResponses = context?.allResponses;
       if (!allResponses) {
         return new Response(
@@ -37,7 +75,7 @@ export async function POST(req: Request) {
 
       // Use plain string model ID - AI SDK auto-routes through AI Gateway
       const result = streamText({
-        model: "anthropic/claude-sonnet-4",
+        model,
         system: DEBATE_COORDINATOR_PROMPT,
         messages: [
           {
@@ -78,7 +116,7 @@ Analyze for disagreements and respond with JSON only.`,
 
     // Use plain string model ID - AI SDK auto-routes through AI Gateway
     const result = streamText({
-      model: "anthropic/claude-sonnet-4",
+      model,
       system: systemPrompt,
       messages,
       maxOutputTokens: 300,

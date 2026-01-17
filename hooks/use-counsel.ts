@@ -29,6 +29,24 @@ function randomDelay(min: number, max: number): number {
 }
 
 /**
+ * Maximum rounds of automatic back-and-forth before requiring user to continue
+ * This creates natural debate flow without endless loops
+ */
+const MAX_AUTO_DEBATE_ROUNDS = 4;
+
+/**
+ * Each grandma has different "typing speed" characteristics
+ * This affects how long their typing indicator shows before message appears
+ */
+const GRANDMA_RESPONSE_DELAYS: Record<GrandmaId, { min: number; max: number }> = {
+  "nana-ruth": { min: 200, max: 600 },      // Nana Ruth is measured and thoughtful
+  "abuela-carmen": { min: 100, max: 400 },  // Abuela Carmen is quick and passionate
+  "ba-nguyen": { min: 300, max: 800 },      // Bà Nguyen takes her time, considered
+  "grandma-edith": { min: 150, max: 500 },  // Grandma Edith has steady rhythm
+  "bibi-amara": { min: 400, max: 1000 },    // Bibi Amara is dramatic, takes longest
+};
+
+/**
  * Hook for managing the counsel of grandmas chat
  */
 export function useCounsel() {
@@ -37,6 +55,10 @@ export function useCounsel() {
   const [isDebating, setIsDebating] = useState(false);
   const [debateQueue, setDebateQueue] = useState<DebateInstruction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [debateRound, setDebateRound] = useState(0);
+  const [recentDebateMessages, setRecentDebateMessages] = useState<
+    Array<{ grandmaId: GrandmaId; content: string; targetId?: GrandmaId }>
+  >([]);
 
   // Track active streaming controllers for cleanup
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
@@ -55,25 +77,7 @@ export function useCounsel() {
       const messageId = generateId();
       abortControllersRef.current.set(messageId, controller);
 
-      // Add initial message (streaming state)
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: messageId,
-          type: "grandma",
-          content: "",
-          grandmaId,
-          replyingTo,
-          timestamp: Date.now(),
-          isStreaming: true,
-        },
-      ]);
-
-      // Remove from typing
-      setTypingGrandmas((prev) =>
-        prev.filter((t) => t.grandmaId !== grandmaId)
-      );
-
+      // Keep typing indicator visible - don't add message until ready
       let fullContent = "";
 
       try {
@@ -114,6 +118,7 @@ export function useCounsel() {
         const decoder = new TextDecoder();
         console.log(`[${grandmaId}] Starting stream read...`);
 
+        // Collect full response (don't display until complete - like iMessage)
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
@@ -122,40 +127,126 @@ export function useCounsel() {
           }
 
           const text = decoder.decode(value, { stream: true });
-
           if (text) {
             fullContent += text;
-            // Update message content
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === messageId ? { ...m, content: fullContent } : m
-              )
-            );
           }
         }
+
+        // Add personality-based delay before showing message (simulates send lag)
+        const delays = GRANDMA_RESPONSE_DELAYS[grandmaId];
+        const postDelay = randomDelay(delays.min, delays.max);
+        await new Promise((r) => setTimeout(r, postDelay));
+
+        // Remove typing indicator
+        setTypingGrandmas((prev) =>
+          prev.filter((t) => t.grandmaId !== grandmaId)
+        );
+
+        // Now add the complete message all at once (like iMessage)
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: messageId,
+            type: "grandma",
+            content: fullContent,
+            grandmaId,
+            replyingTo,
+            timestamp: Date.now(),
+            isStreaming: false,
+          },
+        ]);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
-          // Request was cancelled
+          // Request was cancelled - clean up typing indicator
+          setTypingGrandmas((prev) =>
+            prev.filter((t) => t.grandmaId !== grandmaId)
+          );
           return fullContent;
         }
         console.error(`Error streaming ${grandmaId}:`, error);
         fullContent = `*${GRANDMAS[grandmaId].name} is having technical difficulties*`;
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === messageId ? { ...m, content: fullContent } : m
-          )
+
+        // Remove typing and show error message
+        setTypingGrandmas((prev) =>
+          prev.filter((t) => t.grandmaId !== grandmaId)
         );
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: messageId,
+            type: "grandma",
+            content: fullContent,
+            grandmaId,
+            replyingTo,
+            timestamp: Date.now(),
+            isStreaming: false,
+          },
+        ]);
       } finally {
-        // Mark as done streaming
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === messageId ? { ...m, isStreaming: false } : m
-          )
-        );
         abortControllersRef.current.delete(messageId);
       }
 
       return fullContent;
+    },
+    []
+  );
+
+  /**
+   * Check for reactions to a specific debate message
+   * Used for automatic back-and-forth
+   */
+  const checkForDebateReaction = useCallback(
+    async (
+      speakerId: GrandmaId,
+      speakerContent: string,
+      targetId?: GrandmaId
+    ): Promise<DebateInstruction | null> => {
+      try {
+        const context = targetId
+          ? `${GRANDMAS[speakerId].name} just said (replying to ${GRANDMAS[targetId].name}): "${speakerContent}"`
+          : `${GRANDMAS[speakerId].name} just said: "${speakerContent}"`;
+
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [{ role: "user", content: context }],
+            mode: "coordinator",
+            context: {
+              debateReaction: true,
+              lastSpeaker: speakerId,
+              lastTarget: targetId,
+            },
+          }),
+        });
+
+        if (!response.ok) return null;
+
+        const reader = response.body?.getReader();
+        if (!reader) return null;
+
+        const decoder = new TextDecoder();
+        let fullContent = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          fullContent += decoder.decode(value, { stream: true });
+        }
+
+        const jsonMatch = fullContent.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) return null;
+
+        const parsed = JSON.parse(jsonMatch[0]) as CoordinatorResponse;
+        if (parsed.hasDisagreement && parsed.debates?.length > 0) {
+          // Return just the first reaction - we'll check again after
+          return parsed.debates[0];
+        }
+      } catch (error) {
+        console.error("Error checking for debate reaction:", error);
+      }
+
+      return null;
     },
     []
   );
@@ -213,6 +304,90 @@ export function useCounsel() {
   );
 
   /**
+   * Run automatic debate rounds - grandmas respond to each other
+   * without user intervention for several rounds
+   */
+  const runAutomaticDebates = useCallback(
+    async (initialDebates: DebateInstruction[], startRound: number) => {
+      let currentDebates = [...initialDebates];
+      let round = startRound;
+
+      while (currentDebates.length > 0 && round < MAX_AUTO_DEBATE_ROUNDS) {
+        const debate = currentDebates.shift()!;
+        round++;
+        setDebateRound(round);
+
+        // Personality-based delay before showing typing indicator
+        const readingDelays: Record<GrandmaId, { min: number; max: number }> = {
+          "abuela-carmen": { min: 200, max: 500 },
+          "nana-ruth": { min: 300, max: 700 },
+          "grandma-edith": { min: 250, max: 600 },
+          "ba-nguyen": { min: 400, max: 900 },
+          "bibi-amara": { min: 500, max: 1100 },
+        };
+        const readDelay = readingDelays[debate.responderId];
+        await new Promise((r) => setTimeout(r, randomDelay(readDelay.min, readDelay.max)));
+
+        // Show typing indicator
+        setTypingGrandmas([
+          {
+            grandmaId: debate.responderId,
+            replyingTo: debate.targetId,
+            startedAt: Date.now(),
+          },
+        ]);
+
+        // Stream the debate response
+        const responseContent = await streamGrandmaResponse(
+          debate.reason,
+          debate.responderId,
+          debate.targetId,
+          debate.reason
+        );
+
+        // Track this message for reaction checking
+        setRecentDebateMessages((prev) => [
+          ...prev,
+          {
+            grandmaId: debate.responderId,
+            content: responseContent,
+            targetId: debate.targetId,
+          },
+        ]);
+
+        // Check if anyone wants to react to this response
+        if (round < MAX_AUTO_DEBATE_ROUNDS) {
+          const reaction = await checkForDebateReaction(
+            debate.responderId,
+            responseContent,
+            debate.targetId
+          );
+
+          if (reaction) {
+            // Someone wants to respond! Add to queue
+            currentDebates.push(reaction);
+          }
+        }
+
+        // Small pause between debate rounds for readability
+        if (currentDebates.length > 0) {
+          await new Promise((r) => setTimeout(r, randomDelay(300, 600)));
+        }
+      }
+
+      // After auto-rounds, check if there are still pending debates
+      if (currentDebates.length > 0) {
+        setDebateQueue(currentDebates);
+        // User will need to click continue for more
+      } else {
+        setIsDebating(false);
+        setDebateQueue([]);
+      }
+    },
+    [streamGrandmaResponse, checkForDebateReaction]
+  );
+
+  /**
    * Send a question to all grandmas
    */
   const sendQuestion = useCallback(
@@ -222,6 +397,8 @@ export function useCounsel() {
       setIsLoading(true);
       setIsDebating(false);
       setDebateQueue([]);
+      setDebateRound(0);
+      setRecentDebateMessages([]);
 
       // Add user message
       const userMessage: CounselMessage = {
@@ -232,25 +409,41 @@ export function useCounsel() {
       };
       setMessages((prev) => [...prev, userMessage]);
 
-      // Show staggered typing indicators
-      const typingDelays: number[] = GRANDMA_IDS.map(() =>
-        randomDelay(150, 350)
-      );
+      // Show staggered typing indicators with personality-based timing
+      // Each grandma "notices" the question at different times
+      const typingAppearanceDelays: Record<GrandmaId, number> = {
+        "abuela-carmen": randomDelay(100, 300),  // Abuela Carmen is quick to engage
+        "nana-ruth": randomDelay(200, 500),      // Nana Ruth is attentive
+        "grandma-edith": randomDelay(300, 700),  // Grandma Edith takes a moment
+        "ba-nguyen": randomDelay(400, 900),      // Bà Nguyen is more deliberate
+        "bibi-amara": randomDelay(600, 1200),    // Bibi Amara makes an entrance
+      };
 
-      for (let i = 0; i < GRANDMA_IDS.length; i++) {
+      // Stagger the typing indicator appearances
+      for (const grandmaId of GRANDMA_IDS) {
         setTimeout(() => {
           setTypingGrandmas((prev) => [
             ...prev,
-            { grandmaId: GRANDMA_IDS[i], startedAt: Date.now() },
+            { grandmaId, startedAt: Date.now() },
           ]);
-        }, typingDelays.slice(0, i + 1).reduce((a, b) => a + b, 0));
+        }, typingAppearanceDelays[grandmaId]);
       }
 
-      // Fire parallel requests with varied start delays
+      // Fire parallel requests with personality-based "thinking" delays
+      // Wider variance creates more syncopated message arrival
+      const thinkingDelays: Record<GrandmaId, { min: number; max: number }> = {
+        "abuela-carmen": { min: 300, max: 800 },   // Quick thinker, passionate
+        "nana-ruth": { min: 500, max: 1200 },      // Thoughtful, composed
+        "grandma-edith": { min: 400, max: 1000 },  // Steady, reliable
+        "ba-nguyen": { min: 700, max: 1500 },      // Deliberate, wise
+        "bibi-amara": { min: 800, max: 2000 },     // Takes her time, dramatic
+      };
+
       const responsePromises: Promise<{ id: GrandmaId; content: string }>[] =
         GRANDMA_IDS.map(async (grandmaId) => {
-          // Add variance to when each grandma "starts typing"
-          await new Promise((r) => setTimeout(r, randomDelay(400, 1200)));
+          // Add personality-based variance to when each grandma starts
+          const delays = thinkingDelays[grandmaId];
+          await new Promise((r) => setTimeout(r, randomDelay(delays.min, delays.max)));
           const content = await streamGrandmaResponse(question, grandmaId);
           return { id: grandmaId, content };
         });
@@ -271,53 +464,32 @@ export function useCounsel() {
       const debates = await checkForDebates(question, responses);
 
       if (debates.length > 0) {
-        setDebateQueue(debates);
         setIsDebating(true);
+        // Start automatic debate rounds
+        await runAutomaticDebates(debates, 0);
       }
 
       setIsLoading(false);
     },
-    [isLoading, streamGrandmaResponse, checkForDebates]
+    [isLoading, streamGrandmaResponse, checkForDebates, runAutomaticDebates]
   );
 
   /**
-   * Continue the debate with the next grandma
+   * Continue the debate - runs another round of automatic back-and-forth
    */
   const continueDebate = useCallback(async () => {
     if (debateQueue.length === 0 || isLoading) return;
 
     setIsLoading(true);
 
-    const [nextDebate, ...remainingDebates] = debateQueue;
-    setDebateQueue(remainingDebates);
+    // Reset round counter for a fresh set of auto-rounds
+    setDebateRound(0);
 
-    // Show typing indicator for the responder
-    setTypingGrandmas([
-      {
-        grandmaId: nextDebate.responderId,
-        replyingTo: nextDebate.targetId,
-        startedAt: Date.now(),
-      },
-    ]);
-
-    // Small delay for natural feel
-    await new Promise((r) => setTimeout(r, randomDelay(500, 1000)));
-
-    // Stream the debate response
-    await streamGrandmaResponse(
-      nextDebate.reason,
-      nextDebate.responderId,
-      nextDebate.targetId,
-      nextDebate.reason
-    );
-
-    // Check if more debates
-    if (remainingDebates.length === 0) {
-      setIsDebating(false);
-    }
+    // Run automatic debates with the queued items
+    await runAutomaticDebates(debateQueue, 0);
 
     setIsLoading(false);
-  }, [debateQueue, isLoading, streamGrandmaResponse]);
+  }, [debateQueue, isLoading, runAutomaticDebates]);
 
   /**
    * End the debate early
@@ -354,6 +526,8 @@ export function useCounsel() {
     setTypingGrandmas([]);
     setIsDebating(false);
     setDebateQueue([]);
+    setDebateRound(0);
+    setRecentDebateMessages([]);
     setIsLoading(false);
   }, []);
 
@@ -362,6 +536,8 @@ export function useCounsel() {
     typingGrandmas,
     isDebating,
     isLoading,
+    debateRound,
+    maxDebateRounds: MAX_AUTO_DEBATE_ROUNDS,
     hasQueuedDebates: debateQueue.length > 0,
     sendQuestion,
     continueDebate,
