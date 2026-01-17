@@ -155,7 +155,17 @@ Analyze for disagreements and respond with JSON only.`,
         maxOutputTokens: 150,
       });
 
-      return result.toTextStreamResponse();
+      // Use same format as regular responses for client compatibility
+      const encoder = new TextEncoder();
+      const transformStream = new TransformStream({
+        transform(textChunk, controller) {
+          controller.enqueue(encoder.encode(`0:${JSON.stringify(textChunk)}\n`));
+        },
+      });
+
+      return new Response(result.textStream.pipeThrough(transformStream), {
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      });
     }
 
     // Regular response mode - with memory tools if userId is provided
