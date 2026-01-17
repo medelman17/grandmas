@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useCounsel } from "@/hooks/use-counsel";
+import { useUserId } from "@/hooks/use-user-id";
 import { CouncilHeader } from "./council-header";
 import { UserMessage } from "./user-message";
 import { GrandmaMessage } from "./grandma-message";
@@ -39,6 +40,9 @@ const avatarVariants = {
 };
 
 export function CounselChat() {
+  // Get persistent anonymous user ID for memory features
+  const { userId } = useUserId();
+
   const {
     messages,
     typingGrandmas,
@@ -53,7 +57,7 @@ export function CounselChat() {
     endDebate,
     requestMeetingSummary,
     dismissSummaryPrompt,
-  } = useCounsel();
+  } = useCounsel(userId);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 

@@ -59,8 +59,9 @@ const GRANDMA_RESPONSE_DELAYS: Record<GrandmaId, { min: number; max: number }> =
 
 /**
  * Hook for managing the counsel of grandmas chat
+ * @param userId - Optional user ID for memory features
  */
-export function useCounsel() {
+export function useCounsel(userId?: string | null) {
   const [messages, setMessages] = useState<CounselMessage[]>([]);
   const [typingGrandmas, setTypingGrandmas] = useState<TypingState[]>([]);
   const [isDebating, setIsDebating] = useState(false);
@@ -109,6 +110,7 @@ export function useCounsel() {
             ],
             grandmaId,
             mode: "single",
+            userId: userId || undefined,
             context: replyingTo
               ? { replyingTo }
               : undefined,
@@ -202,7 +204,7 @@ export function useCounsel() {
 
       return fullContent;
     },
-    []
+    [userId]
   );
 
   /**
@@ -334,7 +336,7 @@ export function useCounsel() {
    */
   const runAutomaticDebates = useCallback(
     async (initialDebates: DebateInstruction[], startRound: number) => {
-      let currentDebates = [...initialDebates];
+      const currentDebates = [...initialDebates];
       let round = startRound;
       let coordinatorSaysPause = false;
       let coordinatorPauseReason = "";

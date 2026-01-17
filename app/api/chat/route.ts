@@ -1,7 +1,9 @@
-import { streamText } from "ai";
+import { streamText, stepCountIs } from "ai";
 import { gateway } from "@ai-sdk/gateway";
 import { GRANDMAS, DEBATE_COORDINATOR_PROMPT, MEETING_SUMMARY_PROMPT, getDebateResponsePrompt } from "@/lib/grandmas";
 import { ChatRequest, GrandmaId } from "@/lib/types";
+import { createMemoryTools } from "@/lib/memory";
+import { getOrCreateUser } from "@/lib/user/store";
 
 // Use edge runtime for faster cold starts
 export const runtime = "edge";
@@ -12,7 +14,7 @@ const model = gateway("anthropic/claude-sonnet-4");
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as ChatRequest;
-    const { messages, grandmaId, mode, context } = body;
+    const { messages, grandmaId, mode, context, userId } = body;
 
     // Validate request
     if (!messages || !Array.isArray(messages)) {
@@ -138,18 +140,47 @@ Analyze for disagreements and respond with JSON only.`,
     let systemPrompt = grandma.systemPrompt;
 
     // If this is a debate response, modify the prompt
+    // Note: No memory tools during debates - they're fast-paced exchanges
     if (context?.replyingTo && GRANDMAS[context.replyingTo]) {
       const target = GRANDMAS[context.replyingTo];
       // The reason should be in the last user message for debate context
       const reason = messages[messages.length - 1]?.content || "a different perspective";
       systemPrompt = getDebateResponsePrompt(grandma, target, reason);
+
+      // Debate mode - no tools, quick response
+      const result = streamText({
+        model,
+        system: systemPrompt,
+        messages,
+        maxOutputTokens: 150,
+      });
+
+      return result.toTextStreamResponse();
     }
+
+    // Regular response mode - with memory tools if userId is provided
+    // Validate user and get/create their record
+    let validatedUserId: string | null = null;
+    if (userId) {
+      validatedUserId = await getOrCreateUser(userId);
+    }
+
+    // Add memory behavior instructions to system prompt if grandma has them
+    if (grandma.memoryBehavior) {
+      systemPrompt += `\n\nMEMORY INSTRUCTIONS:\n${grandma.memoryBehavior}`;
+    }
+
+    // Create memory tools if we have a valid user
+    const tools = validatedUserId ? createMemoryTools(validatedUserId, grandmaId) : undefined;
 
     // Use plain string model ID - AI SDK auto-routes through AI Gateway
     const result = streamText({
       model,
       system: systemPrompt,
       messages,
+      tools,
+      // Allow tool calling loops only if tools are available
+      ...(tools && { stopWhen: stepCountIs(3) }),
       maxOutputTokens: 150,
     });
 

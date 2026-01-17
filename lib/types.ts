@@ -28,6 +28,8 @@ export interface GrandmaConfig {
     primary: string;
   };
   systemPrompt: string;
+  /** Instructions for how this grandma uses memory tools */
+  memoryBehavior?: string;
 }
 
 /**
@@ -73,6 +75,8 @@ export interface ChatRequest {
   messages: { role: "user" | "assistant"; content: string }[];
   grandmaId?: GrandmaId;
   mode: "single" | "coordinator" | "summary";
+  /** Anonymous user ID for memory features */
+  userId?: string;
   context?: {
     replyingTo?: GrandmaId;
     allResponses?: Record<GrandmaId, string>;
