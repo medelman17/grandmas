@@ -185,7 +185,7 @@ export function CounselChat() {
       </div>
 
       {/* Input */}
-      <ChatInput onSubmit={sendQuestion} isLoading={isLoading} />
+      <ChatInput onSubmit={sendQuestion} isLoading={isLoading} hasMessages={messages.length > 0} />
     </div>
   );
 }

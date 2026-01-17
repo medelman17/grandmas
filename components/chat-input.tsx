@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, FormEvent, KeyboardEvent } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
   onSubmit: (question: string) => void;
   isLoading: boolean;
+  hasMessages: boolean;
 }
 
 const QUICK_PROMPTS = [
@@ -109,9 +110,12 @@ function SendIcon({ className }: { className?: string }) {
   );
 }
 
-export function ChatInput({ onSubmit, isLoading }: ChatInputProps) {
+export function ChatInput({ onSubmit, isLoading, hasMessages }: ChatInputProps) {
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+
+  // Hide prompts once conversation has started
+  const showPrompts = !hasMessages && !isLoading;
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -137,30 +141,39 @@ export function ChatInput({ onSubmit, isLoading }: ChatInputProps) {
   return (
     <div className="border-t border-white/5 bg-white/[0.02] backdrop-blur-xl">
       <div className="max-w-2xl mx-auto p-4">
-        {/* Quick prompts */}
-        <div className="flex flex-wrap gap-2 mb-3">
-          {QUICK_PROMPTS.map(({ text, icon: Icon }) => (
-            <motion.button
-              key={text}
-              onClick={() => handleQuickPrompt(text)}
-              disabled={isLoading}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className={cn(
-                "px-3 py-1.5 rounded-full text-xs",
-                "flex items-center gap-1.5",
-                "bg-white/[0.03] border border-white/[0.08]",
-                "transition-colors duration-200",
-                isLoading
-                  ? "opacity-40 cursor-not-allowed"
-                  : "hover:bg-white/[0.06] hover:border-white/[0.12] text-zinc-300"
-              )}
+        {/* Quick prompts - animate out when conversation starts */}
+        <AnimatePresence>
+          {showPrompts && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="flex flex-wrap gap-2 mb-3 overflow-hidden"
             >
-              <Icon className="w-3.5 h-3.5 text-zinc-500" />
-              <span>{text}</span>
-            </motion.button>
-          ))}
-        </div>
+              {QUICK_PROMPTS.map(({ text, icon: Icon }, index) => (
+                <motion.button
+                  key={text}
+                  onClick={() => handleQuickPrompt(text)}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full text-xs",
+                    "flex items-center gap-1.5",
+                    "bg-white/[0.03] border border-white/[0.08]",
+                    "hover:bg-white/[0.06] hover:border-white/[0.12] text-zinc-300"
+                  )}
+                >
+                  <Icon className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>{text}</span>
+                </motion.button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Input form */}
         <form onSubmit={handleSubmit} className="relative">
