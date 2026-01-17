@@ -20,6 +20,12 @@ export interface GrandmaConfig {
     bg: string;
     text: string;
     border: string;
+    /** Glow shadow for dark mode effects */
+    glow: string;
+    /** Subtle surface background for dark mode */
+    surface: string;
+    /** Primary accent color for dark mode */
+    primary: string;
   };
   systemPrompt: string;
 }
@@ -83,4 +89,8 @@ export interface ChatRequest {
 export interface CoordinatorResponse {
   hasDisagreement: boolean;
   debates: DebateInstruction[];
+  /** Coordinator suggests human check-in at natural pause points */
+  shouldPause?: boolean;
+  /** Reason for pause (for display to user) */
+  pauseReason?: string;
 }
