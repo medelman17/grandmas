@@ -80,7 +80,7 @@ export function CounselChat() {
   // happen in quick succession (e.g., 5 typing indicators appearing)
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     });
     return () => cancelAnimationFrame(frame);
   }, [messages, typingGrandmas]);
@@ -92,7 +92,7 @@ export function CounselChat() {
 
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+        <div className="max-w-2xl mx-auto px-4 pt-6 pb-4 space-y-4">
           {/* Empty state */}
           {messages.length === 0 && (
             <div className="text-center py-16">
@@ -218,8 +218,8 @@ export function CounselChat() {
             </div>
           )}
 
-          {/* Scroll anchor */}
-          <div ref={messagesEndRef} />
+          {/* Scroll anchor with buffer space */}
+          <div ref={messagesEndRef} className="h-4" />
         </div>
       </div>
 
