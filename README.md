@@ -44,6 +44,7 @@ Counsel of Grandmas is a multi-agent AI chat application where five distinct gra
 - [Deployment](#deployment)
 - [Performance Optimizations](#performance-optimizations)
 - [Contributing](#contributing)
+  - [Development with Serena (Optional)](#development-with-serena-optional)
 - [License](#license)
 
 ---
@@ -603,6 +604,28 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+### Development with Serena (Optional)
+
+This project includes configuration for [Serena](https://github.com/oraios/serena), a semantic coding MCP server that provides intelligent code navigation and editing when used with Claude Code or other MCP-compatible clients.
+
+**What's included:**
+- `.serena/project.yml` — Project configuration (TypeScript, encoding)
+- `.serena/memories/` — Knowledge base with architecture docs, conventions, commands
+
+**To use Serena:**
+
+1. Install Serena MCP server ([installation guide](https://github.com/oraios/serena#installation))
+2. Configure it in your Claude Code MCP settings (`~/.claude/settings.json`)
+3. The project will auto-activate with stored memories when you open this repo
+
+**Benefits:**
+- Symbol-level code navigation (`find_symbol`, `get_symbols_overview`)
+- Intelligent refactoring (`replace_symbol_body`, `rename_symbol`)
+- Reference finding across the codebase
+- Persistent project knowledge across sessions
+
+> **Note:** Serena is optional. Claude Code works fine without it using CLAUDE.md for context.
 
 ---
 
