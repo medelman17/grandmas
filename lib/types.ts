@@ -111,3 +111,52 @@ export interface MemoryActivity {
   toolCallId: string;
   startedAt: number;
 }
+
+/**
+ * A private message between a user and a single grandma
+ */
+export interface PrivateMessage {
+  id: string;
+  grandmaId: GrandmaId;
+  role: "user" | "grandma";
+  content: string;
+  timestamp: number;
+  isStreaming?: boolean;
+  /** True if this message was initiated proactively by the grandma */
+  isProactive?: boolean;
+}
+
+/**
+ * State for private conversations with each grandma
+ */
+export interface PrivateConversation {
+  grandmaId: GrandmaId;
+  messages: PrivateMessage[];
+  unreadCount: number;
+  isTyping: boolean;
+  lastActivity: number;
+}
+
+/**
+ * Proactive message trigger - when a grandma wants to message the user privately
+ */
+export interface ProactiveMessageTrigger {
+  grandmaId: GrandmaId;
+  reason: string;
+  /** Context from the group chat that triggered this */
+  groupContext?: string;
+}
+
+/**
+ * API request body for private chat endpoint
+ */
+export interface PrivateChatRequest {
+  messages: { role: "user" | "assistant"; content: string }[];
+  grandmaId: GrandmaId;
+  userId?: string;
+  /** Context for proactive messages (what triggered the grandma to reach out) */
+  proactiveContext?: {
+    groupDiscussion: string;
+    triggerReason: string;
+  };
+}
