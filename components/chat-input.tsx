@@ -194,7 +194,7 @@ export function ChatInput({
   };
 
   return (
-    <div className="border-t border-white/5 bg-white/[0.02] backdrop-blur-xl safe-bottom">
+    <div className="border-t border-white/5 bg-zinc-900/95 backdrop-blur-xl">
       <div className="max-w-2xl mx-auto p-3 sm:p-4">
         {/* Quick prompts - animate out when conversation starts */}
         <AnimatePresence>

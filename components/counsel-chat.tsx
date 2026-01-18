@@ -201,19 +201,21 @@ export function CounselChat() {
   }, [messages, typingGrandmas, memoryActivities, isAtBottom]);
 
   return (
-    <div className="flex flex-col min-h-screen h-[100dvh] ambient-gradient relative noise-overlay">
-      {/* Header */}
-      <CouncilHeader
-        isDebating={isDebating}
-        unreadCounts={unreadCounts}
-        onGrandmaClick={openPrivateChat}
-      />
+    <div className="fixed inset-0 flex flex-col ambient-gradient noise-overlay">
+      {/* Header - sticky with safe area */}
+      <div className="shrink-0 safe-top">
+        <CouncilHeader
+          isDebating={isDebating}
+          unreadCounts={unreadCounts}
+          onGrandmaClick={openPrivateChat}
+        />
+      </div>
 
       {/* Messages area */}
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto relative"
+        className="flex-1 overflow-y-auto relative min-h-0"
       >
         <div className="max-w-2xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-4 space-y-3 sm:space-y-4">
           {/* Empty state */}
@@ -357,27 +359,30 @@ export function CounselChat() {
         />
       </div>
 
-      {/* Initial typing/memory indicators - pinned above input */}
-      {(typingGrandmas.length > 0 && !typingGrandmas.some((t) => t.replyingTo)) && (
-        <div className="px-4 py-3 flex flex-col items-center gap-2">
-          <TypingIndicators typingGrandmas={typingGrandmas} />
-          {memoryActivities.length > 0 && (
-            <MemoryIndicators memoryActivities={memoryActivities} />
-          )}
-        </div>
-      )}
+      {/* Bottom section - always visible */}
+      <div className="shrink-0 safe-bottom">
+        {/* Initial typing/memory indicators - pinned above input */}
+        {(typingGrandmas.length > 0 && !typingGrandmas.some((t) => t.replyingTo)) && (
+          <div className="px-4 py-2 flex flex-col items-center gap-2 bg-zinc-900/80 backdrop-blur-sm">
+            <TypingIndicators typingGrandmas={typingGrandmas} />
+            {memoryActivities.length > 0 && (
+              <MemoryIndicators memoryActivities={memoryActivities} />
+            )}
+          </div>
+        )}
 
-      {/* Input / Debate Controls */}
-      <ChatInput
-        onSubmit={sendQuestion}
-        isLoading={isLoading}
-        hasMessages={messages.length > 0}
-        isDebating={isDebating}
-        hasQueuedDebates={hasQueuedDebates}
-        debatePauseReason={debatePauseReason}
-        onContinueDebate={continueDebate}
-        onEndDebate={endDebate}
-      />
+        {/* Input / Debate Controls */}
+        <ChatInput
+          onSubmit={sendQuestion}
+          isLoading={isLoading}
+          hasMessages={messages.length > 0}
+          isDebating={isDebating}
+          hasQueuedDebates={hasQueuedDebates}
+          debatePauseReason={debatePauseReason}
+          onContinueDebate={continueDebate}
+          onEndDebate={endDebate}
+        />
+      </div>
 
       {/* Private Chat Modal */}
       <PrivateChatModal
