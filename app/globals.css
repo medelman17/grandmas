@@ -142,3 +142,10 @@ body {
   content-visibility: auto;
   contain-intrinsic-size: 0 80px;
 }
+
+/* Safe areas for notched devices (iPhone X+, etc.) */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

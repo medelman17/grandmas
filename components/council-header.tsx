@@ -13,11 +13,11 @@ export function CouncilHeader({ isDebating }: CouncilHeaderProps) {
     <div className="border-b border-white/5 bg-white/[0.02] backdrop-blur-xl">
       <div className="max-w-2xl mx-auto px-4 py-3">
         {/* Compact header row */}
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Title and avatars inline */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div>
-              <h1 className="text-lg font-semibold text-white leading-tight">
+              <h1 className="text-base sm:text-lg font-semibold text-white leading-tight">
                 Counsel of Grandmas
               </h1>
               <p className="text-xs text-zinc-500">
@@ -26,7 +26,7 @@ export function CouncilHeader({ isDebating }: CouncilHeaderProps) {
             </div>
 
             {/* Grandma avatars */}
-            <div className="flex gap-1.5">
+            <div className="flex gap-1 sm:gap-1.5">
               {GRANDMA_IDS.map((id) => {
                 const grandma = GRANDMAS[id];
                 return (
@@ -38,13 +38,13 @@ export function CouncilHeader({ isDebating }: CouncilHeaderProps) {
                   >
                     <div
                       className={cn(
-                        "relative w-7 h-7 rounded-full flex items-center justify-center",
+                        "relative w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center",
                         "bg-gradient-to-br shadow-md border border-white/10",
                         grandma.colors.gradient
                       )}
                       title={grandma.name}
                     >
-                      <span className="text-xs">{grandma.emoji}</span>
+                      <span className="text-[10px] sm:text-xs">{grandma.emoji}</span>
                     </div>
                   </motion.div>
                 );
@@ -58,7 +58,7 @@ export function CouncilHeader({ isDebating }: CouncilHeaderProps) {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               className={cn(
-                "px-3 py-1.5 rounded-full text-xs font-medium",
+                "px-2 sm:px-3 py-1.5 rounded-full text-xs font-medium",
                 "bg-red-500/20 text-red-300 border border-red-500/30",
                 "shadow-[0_0_20px_rgba(239,68,68,0.3)]"
               )}
@@ -69,7 +69,7 @@ export function CouncilHeader({ isDebating }: CouncilHeaderProps) {
                   animate={{ opacity: [1, 0.4, 1], scale: [1, 0.9, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 />
-                DEBATING
+                <span className="hidden sm:inline">DEBATING</span>
               </span>
             </motion.div>
           )}

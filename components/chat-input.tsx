@@ -194,8 +194,8 @@ export function ChatInput({
   };
 
   return (
-    <div className="border-t border-white/5 bg-white/[0.02] backdrop-blur-xl">
-      <div className="max-w-2xl mx-auto p-4">
+    <div className="border-t border-white/5 bg-white/[0.02] backdrop-blur-xl safe-bottom">
+      <div className="max-w-2xl mx-auto p-3 sm:p-4">
         {/* Quick prompts - animate out when conversation starts */}
         <AnimatePresence>
           {showPrompts && (
@@ -219,7 +219,9 @@ export function ChatInput({
                     "px-3 py-1.5 rounded-full text-xs",
                     "flex items-center gap-1.5",
                     "bg-white/[0.03] border border-white/[0.08]",
-                    "hover:bg-white/[0.06] hover:border-white/[0.12] text-zinc-300"
+                    "hover:bg-white/[0.06] hover:border-white/[0.12] text-zinc-300",
+                    // Hide 3rd and 4th prompts on mobile (less space available)
+                    index >= 2 && "hidden sm:flex"
                   )}
                 >
                   <Icon className="w-3.5 h-3.5 text-zinc-500" />
@@ -240,46 +242,50 @@ export function ChatInput({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
               className={cn(
-                "flex items-center justify-center gap-3 p-3 rounded-2xl",
+                "flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 p-3 rounded-2xl",
                 "bg-white/[0.03] border border-amber-500/20",
                 "shadow-[0_0_20px_rgba(245,158,11,0.1)]"
               )}
             >
-              <span className="text-xs text-zinc-500 mr-2">
+              <span className="text-xs text-zinc-500 sm:mr-2 text-center">
                 {debatePauseReason || "The grandmas are debating..."}
               </span>
-              <motion.button
-                onClick={onContinueDebate}
-                disabled={!hasQueuedDebates}
-                whileHover={hasQueuedDebates ? { scale: 1.05 } : {}}
-                whileTap={hasQueuedDebates ? { scale: 0.95 } : {}}
-                className={cn(
-                  "px-4 py-2 rounded-xl text-sm font-medium",
-                  "flex items-center gap-2",
-                  "transition-all duration-200",
-                  !hasQueuedDebates
-                    ? "bg-white/[0.03] text-zinc-600 cursor-not-allowed"
-                    : "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
-                )}
-              >
-                <FlameIcon className="w-4 h-4" />
-                <span>{debatePauseReason ? "Keep listening" : "Let them cook"}</span>
-              </motion.button>
+              <div className="flex gap-2 sm:gap-3">
+                <motion.button
+                  onClick={onContinueDebate}
+                  disabled={!hasQueuedDebates}
+                  whileHover={hasQueuedDebates ? { scale: 1.05 } : {}}
+                  whileTap={hasQueuedDebates ? { scale: 0.95 } : {}}
+                  className={cn(
+                    "px-3 sm:px-4 py-2 rounded-xl text-sm font-medium",
+                    "flex items-center gap-2",
+                    "transition-all duration-200",
+                    !hasQueuedDebates
+                      ? "bg-white/[0.03] text-zinc-600 cursor-not-allowed"
+                      : "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                  )}
+                >
+                  <FlameIcon className="w-4 h-4" />
+                  <span className="hidden sm:inline">{debatePauseReason ? "Keep listening" : "Let them cook"}</span>
+                  <span className="sm:hidden">{debatePauseReason ? "Listen" : "Continue"}</span>
+                </motion.button>
 
-              <motion.button
-                onClick={onEndDebate}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={cn(
-                  "px-4 py-2 rounded-xl text-sm font-medium",
-                  "flex items-center gap-2",
-                  "bg-white/[0.05] text-zinc-300 border border-white/[0.1]",
-                  "hover:bg-white/[0.08] transition-all duration-200"
-                )}
-              >
-                <GavelIcon className="w-4 h-4" />
-                <span>{debatePauseReason ? "I've heard enough" : "Order!"}</span>
-              </motion.button>
+                <motion.button
+                  onClick={onEndDebate}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={cn(
+                    "px-3 sm:px-4 py-2 rounded-xl text-sm font-medium",
+                    "flex items-center gap-2",
+                    "bg-white/[0.05] text-zinc-300 border border-white/[0.1]",
+                    "hover:bg-white/[0.08] transition-all duration-200"
+                  )}
+                >
+                  <GavelIcon className="w-4 h-4" />
+                  <span className="hidden sm:inline">{debatePauseReason ? "I've heard enough" : "Order!"}</span>
+                  <span className="sm:hidden">{debatePauseReason ? "Enough" : "End"}</span>
+                </motion.button>
+              </div>
             </motion.div>
           ) : (
             <motion.form
@@ -307,11 +313,11 @@ export function ChatInput({
                   onKeyDown={handleKeyDown}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
-                  placeholder="Ask the grandmas for advice..."
+                  placeholder="Ask for advice..."
                   disabled={isLoading}
                   rows={1}
                   className={cn(
-                    "flex-1 resize-none bg-transparent px-4 py-3",
+                    "flex-1 resize-none bg-transparent px-3 sm:px-4 py-3",
                     "focus:outline-none",
                     "placeholder:text-zinc-600 text-sm text-white",
                     "transition-all duration-200",
@@ -324,7 +330,7 @@ export function ChatInput({
                   whileHover={!input.trim() || isLoading ? {} : { scale: 1.05 }}
                   whileTap={!input.trim() || isLoading ? {} : { scale: 0.95 }}
                   className={cn(
-                    "px-5 py-3 rounded-xl font-medium text-sm",
+                    "px-3 sm:px-5 py-3 rounded-xl font-medium text-sm",
                     "flex items-center gap-2",
                     "transition-all duration-200",
                     !input.trim() || isLoading
@@ -350,7 +356,7 @@ export function ChatInput({
                   ) : (
                     <>
                       <SendIcon className="w-4 h-4" />
-                      <span>Convene</span>
+                      <span className="hidden sm:inline">Convene</span>
                     </>
                   )}
                 </motion.button>

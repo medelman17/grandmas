@@ -12,7 +12,7 @@ import { MemoryIndicators } from "./memory-indicator";
 import { ChatInput } from "./chat-input";
 import { GRANDMA_IDS, GRANDMAS } from "@/lib/grandmas";
 import { cn } from "@/lib/utils";
-import { CounselMessage, GrandmaId } from "@/lib/types";
+import { GrandmaId } from "@/lib/types";
 import { Markdown } from "./markdown";
 import { SummaryPrompt } from "./summary-prompt";
 
@@ -92,13 +92,13 @@ export function CounselChat() {
   }, [messages, typingGrandmas, memoryActivities]);
 
   return (
-    <div className="flex flex-col h-screen ambient-gradient relative noise-overlay">
+    <div className="flex flex-col min-h-screen h-[100dvh] ambient-gradient relative noise-overlay">
       {/* Header */}
       <CouncilHeader isDebating={isDebating} />
 
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-4 pt-6 pb-4 space-y-4">
+        <div className="max-w-2xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-4 space-y-3 sm:space-y-4">
           {/* Empty state */}
           {messages.length === 0 && (
             <div className="text-center py-16">
