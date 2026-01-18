@@ -22,13 +22,15 @@ export const ALLIANCE_CONFIG = {
   /**
    * Minimum delay before gossip message is delivered (ms)
    * Creates anticipation and feels more natural
+   * TODO: Increase to 2 * 60 * 1000 (2 minutes) for production
    */
-  deliveryDelayMin: 2 * 60 * 1000, // 2 minutes
+  deliveryDelayMin: 15 * 1000, // 15 seconds (testing)
 
   /**
    * Maximum delay before gossip message is delivered (ms)
+   * TODO: Increase to 5 * 60 * 1000 (5 minutes) for production
    */
-  deliveryDelayMax: 5 * 60 * 1000, // 5 minutes
+  deliveryDelayMax: 30 * 1000, // 30 seconds (testing)
 
   /**
    * Maximum alliance messages per day per user session
@@ -39,14 +41,16 @@ export const ALLIANCE_CONFIG = {
   /**
    * Cooldown between gossip from the same grandma (ms)
    * Prevents one grandma from dominating
+   * TODO: Increase to 30 * 60 * 1000 (30 minutes) for production
    */
-  sameGrandmaCooldown: 30 * 60 * 1000, // 30 minutes
+  sameGrandmaCooldown: 60 * 1000, // 1 minute (testing)
 
   /**
    * Cooldown between any alliance messages (ms)
    * Prevents gossip overload even from different grandmas
+   * TODO: Increase to 10 * 60 * 1000 (10 minutes) for production
    */
-  globalCooldown: 10 * 60 * 1000, // 10 minutes
+  globalCooldown: 30 * 1000, // 30 seconds (testing)
 } as const;
 
 /**
