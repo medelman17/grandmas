@@ -1,6 +1,6 @@
 import { streamText, stepCountIs } from "ai";
 import { gateway } from "@ai-sdk/gateway";
-import { GRANDMAS, DEBATE_COORDINATOR_PROMPT, MEETING_SUMMARY_PROMPT, getDebateResponsePrompt } from "@/lib/grandmas";
+import { GRANDMAS, DEBATE_COORDINATOR_PROMPT, MEETING_SUMMARY_PROMPT, getDebateResponsePrompt, getProactiveCheckPrompt } from "@/lib/grandmas";
 import { ChatRequest, GrandmaId } from "@/lib/types";
 import { createMemoryTools } from "@/lib/memory";
 import { getOrCreateUser } from "@/lib/user/store";
@@ -123,6 +123,41 @@ Analyze for disagreements and respond with JSON only.`,
           },
         ],
         maxOutputTokens: 600,
+      });
+
+      return result.toTextStreamResponse();
+    }
+
+    // Proactive check mode: Determine if a grandma should reach out privately
+    if (mode === "proactive-check") {
+      if (!grandmaId || !GRANDMAS[grandmaId]) {
+        return new Response(
+          JSON.stringify({ error: "grandmaId required for proactive-check mode" }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      const recentGroupMessages = context?.recentGroupMessages;
+      if (!recentGroupMessages) {
+        return new Response(
+          JSON.stringify({ error: "recentGroupMessages required for proactive-check mode" }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      const grandma = GRANDMAS[grandmaId];
+      const proactivePrompt = getProactiveCheckPrompt(grandma);
+
+      const result = streamText({
+        model,
+        system: proactivePrompt,
+        messages: [
+          {
+            role: "user",
+            content: `Here's the recent group conversation:\n\n${recentGroupMessages}\n\nShould ${grandma.name} reach out to the user privately? Respond with JSON only.`,
+          },
+        ],
+        maxOutputTokens: 200,
       });
 
       return result.toTextStreamResponse();

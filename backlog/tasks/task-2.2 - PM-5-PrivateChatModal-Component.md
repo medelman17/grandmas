@@ -1,10 +1,10 @@
 ---
 id: task-2.2
 title: 'PM-5: PrivateChatModal Component'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:10'
-updated_date: '2026-01-18 01:13'
+updated_date: '2026-01-18 01:30'
 labels:
   - private-messaging
   - ui

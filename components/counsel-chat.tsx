@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useCounsel } from "@/hooks/use-counsel";
+import { useCounsel, UseCounselOptions } from "@/hooks/use-counsel";
 import { usePrivateMessages } from "@/hooks/use-private-messages";
 import { useUserId } from "@/hooks/use-user-id";
 import { CouncilHeader } from "./council-header";
@@ -47,6 +47,38 @@ export function CounselChat() {
   // Get persistent anonymous user ID for memory features
   const { userId } = useUserId();
 
+  // Private messaging hook - called first so we can wire up the proactive callback
+  const {
+    conversations,
+    activeGrandma,
+    memoryActivities: privateMemoryActivities,
+    isLoading: isPrivateLoading,
+    unreadCounts,
+    openPrivateChat,
+    closePrivateChat,
+    sendPrivateMessage,
+    triggerProactiveMessage,
+  } = usePrivateMessages(userId);
+
+  // Create proactive message callback
+  // Uses useCallback to prevent unnecessary re-renders of useCounsel
+  const handleProactiveMessageTrigger = useCallback(
+    (grandmaId: GrandmaId, groupTranscript: string, reason: string) => {
+      console.log(`[CounselChat] Proactive trigger from ${grandmaId}: ${reason}`);
+      triggerProactiveMessage(grandmaId, groupTranscript, reason);
+    },
+    [triggerProactiveMessage]
+  );
+
+  // Memoize counsel options to prevent unnecessary hook re-runs
+  const counselOptions = useMemo<UseCounselOptions>(
+    () => ({
+      userId,
+      onProactiveMessageTrigger: handleProactiveMessageTrigger,
+    }),
+    [userId, handleProactiveMessageTrigger]
+  );
+
   const {
     messages,
     typingGrandmas,
@@ -62,19 +94,7 @@ export function CounselChat() {
     endDebate,
     requestMeetingSummary,
     dismissSummaryPrompt,
-  } = useCounsel(userId);
-
-  // Private messaging hook
-  const {
-    conversations,
-    activeGrandma,
-    memoryActivities: privateMemoryActivities,
-    isLoading: isPrivateLoading,
-    unreadCounts,
-    openPrivateChat,
-    closePrivateChat,
-    sendPrivateMessage,
-  } = usePrivateMessages(userId);
+  } = useCounsel(counselOptions);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);

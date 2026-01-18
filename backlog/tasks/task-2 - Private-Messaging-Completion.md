@@ -1,9 +1,10 @@
 ---
 id: task-2
 title: Private Messaging Completion
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:09'
+updated_date: '2026-01-18 01:34'
 labels:
   - feature
   - ui

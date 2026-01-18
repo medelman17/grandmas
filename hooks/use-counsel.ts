@@ -8,6 +8,7 @@ import {
   GrandmaId,
   CoordinatorResponse,
   MemoryActivity,
+  ProactiveCheckResponse,
 } from "@/lib/types";
 import { GRANDMAS, GRANDMA_IDS } from "@/lib/grandmas";
 
@@ -104,10 +105,34 @@ const GRANDMA_RESPONSE_DELAYS: Record<GrandmaId, { min: number; max: number }> =
 };
 
 /**
- * Hook for managing the counsel of grandmas chat
- * @param userId - Optional user ID for memory features
+ * Probability that proactive checks run (per grandma)
+ * We don't check every time to make it feel special when it happens
  */
-export function useCounsel(userId?: string | null) {
+const PROACTIVE_CHECK_PROBABILITY = 0.35; // ~35% chance per grandma to even check
+
+/**
+ * Options for the useCounsel hook
+ */
+export interface UseCounselOptions {
+  /** User ID for memory features */
+  userId?: string | null;
+  /**
+   * Callback when a grandma wants to reach out privately
+   * Called with grandmaId, the group transcript, and the reason for reaching out
+   */
+  onProactiveMessageTrigger?: (
+    grandmaId: GrandmaId,
+    groupTranscript: string,
+    reason: string
+  ) => void;
+}
+
+/**
+ * Hook for managing the counsel of grandmas chat
+ * @param options - Hook configuration options
+ */
+export function useCounsel(options: UseCounselOptions = {}) {
+  const { userId, onProactiveMessageTrigger } = options;
   const [messages, setMessages] = useState<CounselMessage[]>([]);
   const [typingGrandmas, setTypingGrandmas] = useState<TypingState[]>([]);
   const [isDebating, setIsDebating] = useState(false);
@@ -124,6 +149,10 @@ export function useCounsel(userId?: string | null) {
 
   // Track active streaming controllers for cleanup
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
+
+  // Ref to track latest messages for proactive checks (avoids stale closure issues)
+  const messagesRef = useRef<CounselMessage[]>([]);
+  messagesRef.current = messages;
 
   /**
    * Stream a response from a single grandma
@@ -423,6 +452,119 @@ export function useCounsel(userId?: string | null) {
   );
 
   /**
+   * Generate a transcript of recent messages for API calls
+   * Used for proactive message checking and summaries
+   */
+  const generateRecentTranscript = useCallback((msgs: CounselMessage[]): string => {
+    // Get last 10 messages or so (enough context without overwhelming)
+    const recentMsgs = msgs.slice(-10);
+    return recentMsgs
+      .map((msg) => {
+        if (msg.type === "user") {
+          return `User: ${msg.content}`;
+        }
+        if (msg.type === "grandma" && msg.grandmaId) {
+          const grandma = GRANDMAS[msg.grandmaId];
+          const prefix = msg.replyingTo
+            ? `${grandma.name} (replying to ${GRANDMAS[msg.replyingTo].name})`
+            : grandma.name;
+          return `${prefix}: ${msg.content}`;
+        }
+        return null;
+      })
+      .filter(Boolean)
+      .join("\n\n");
+  }, []);
+
+  /**
+   * Check if a specific grandma should reach out privately
+   * Returns true if proactive message was triggered
+   */
+  const checkForProactiveMessage = useCallback(
+    async (grandmaId: GrandmaId, currentMessages: CounselMessage[]): Promise<boolean> => {
+      // Skip if no callback registered
+      if (!onProactiveMessageTrigger) return false;
+
+      // Apply probability filter - not every grandma checks every time
+      if (Math.random() > PROACTIVE_CHECK_PROBABILITY) {
+        console.log(`[Proactive] ${grandmaId} skipped (probability filter)`);
+        return false;
+      }
+
+      try {
+        const transcript = generateRecentTranscript(currentMessages);
+        if (!transcript) return false;
+
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [],
+            grandmaId,
+            mode: "proactive-check",
+            context: { recentGroupMessages: transcript },
+          }),
+        });
+
+        if (!response.ok) return false;
+
+        const reader = response.body?.getReader();
+        if (!reader) return false;
+
+        const decoder = new TextDecoder();
+        let fullContent = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          fullContent += decoder.decode(value, { stream: true });
+        }
+
+        // Parse JSON response
+        const jsonMatch = fullContent.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) return false;
+
+        const parsed = JSON.parse(jsonMatch[0]) as ProactiveCheckResponse;
+
+        if (parsed.shouldReach && parsed.reason) {
+          console.log(`[Proactive] ${grandmaId} wants to reach out: ${parsed.reason}`);
+          onProactiveMessageTrigger(grandmaId, transcript, parsed.reason);
+          return true;
+        }
+      } catch (error) {
+        console.error(`Error checking proactive message for ${grandmaId}:`, error);
+      }
+
+      return false;
+    },
+    [onProactiveMessageTrigger, generateRecentTranscript]
+  );
+
+  /**
+   * Run proactive checks for all grandmas after conversation activity
+   * Runs in parallel with probability-based filtering
+   */
+  const runProactiveChecks = useCallback(
+    async (currentMessages: CounselMessage[]) => {
+      // Only run if callback is registered
+      if (!onProactiveMessageTrigger) return;
+
+      // Check each grandma in parallel (probability filter applied inside)
+      const checkPromises = GRANDMA_IDS.map((grandmaId) =>
+        checkForProactiveMessage(grandmaId, currentMessages)
+      );
+
+      const results = await Promise.all(checkPromises);
+      const triggeredCount = results.filter(Boolean).length;
+
+      if (triggeredCount > 0) {
+        console.log(`[Proactive] ${triggeredCount} grandma(s) triggered proactive outreach`);
+      }
+    },
+    [onProactiveMessageTrigger, checkForProactiveMessage]
+  );
+
+  /**
    * Run automatic debate rounds - grandmas respond to each other
    * without user intervention until a natural pause or check-in point
    */
@@ -524,9 +666,15 @@ export function useCounsel(userId?: string | null) {
         setIsDebating(false);
         setDebateQueue([]);
         setDebatePauseReason("");
+
+        // Debates concluded naturally - great time for proactive outreach check
+        // Small delay to let state settle before checking
+        setTimeout(() => {
+          runProactiveChecks(messagesRef.current);
+        }, 500);
       }
     },
-    [streamGrandmaResponse, checkForDebateReaction]
+    [streamGrandmaResponse, checkForDebateReaction, runProactiveChecks]
   );
 
   /**
@@ -617,11 +765,17 @@ export function useCounsel(userId?: string | null) {
         setIsDebating(true);
         // Start automatic debate rounds
         await runAutomaticDebates(debates, 0);
+      } else {
+        // No debates - good time to check for proactive outreach
+        // Small delay to let state settle
+        setTimeout(() => {
+          runProactiveChecks(messagesRef.current);
+        }, 500);
       }
 
       setIsLoading(false);
     },
-    [isLoading, streamGrandmaResponse, checkForDebates, runAutomaticDebates]
+    [isLoading, streamGrandmaResponse, checkForDebates, runAutomaticDebates, runProactiveChecks]
   );
 
   /**

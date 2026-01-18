@@ -1,9 +1,10 @@
 ---
 id: task-2.3
 title: 'PM-6: Proactive Messaging Logic'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:10'
+updated_date: '2026-01-18 01:34'
 labels:
   - private-messaging
   - hooks

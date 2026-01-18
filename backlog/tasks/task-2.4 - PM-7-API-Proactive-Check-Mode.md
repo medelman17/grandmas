@@ -1,10 +1,10 @@
 ---
 id: task-2.4
 title: 'PM-7: API Proactive-Check Mode'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:10'
-updated_date: '2026-01-18 01:13'
+updated_date: '2026-01-18 01:34'
 labels:
   - private-messaging
   - api

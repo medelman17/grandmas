@@ -74,7 +74,7 @@ export interface DebateInstruction {
 export interface ChatRequest {
   messages: { role: "user" | "assistant"; content: string }[];
   grandmaId?: GrandmaId;
-  mode: "single" | "coordinator" | "summary";
+  mode: "single" | "coordinator" | "summary" | "proactive-check";
   /** Anonymous user ID for memory features */
   userId?: string;
   context?: {
@@ -86,6 +86,8 @@ export interface ChatRequest {
     lastTarget?: GrandmaId;
     // For meeting summary generation
     conversationTranscript?: string;
+    // For proactive message checking
+    recentGroupMessages?: string;
   };
 }
 
@@ -145,6 +147,15 @@ export interface ProactiveMessageTrigger {
   reason: string;
   /** Context from the group chat that triggered this */
   groupContext?: string;
+}
+
+/**
+ * Response from proactive-check mode API
+ */
+export interface ProactiveCheckResponse {
+  shouldReach: boolean;
+  /** Reason the grandma wants to reach out (for the proactive message context) */
+  reason?: string;
 }
 
 /**
