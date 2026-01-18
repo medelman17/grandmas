@@ -48,16 +48,15 @@ export function CounselChat() {
   // Get persistent anonymous user ID for memory features
   const { userId } = useUserId();
 
-  // Track group messages for private chat context
-  // This ref will be updated after useCounsel is called
-  const groupMessagesRef = useRef<CounselMessage[]>([]);
+  // Group messages state - will be populated by useCounsel
+  // We need to track this for private chat context
+  const [groupMessages, setGroupMessages] = useState<CounselMessage[]>([]);
 
-  // Private messaging hook - called first so we can wire up the proactive callback
-  // Note: Group messages are passed via ref that gets updated after useCounsel
+  // Private messaging hook - receives group messages for context
   const privateMessagesOptions = useMemo(() => ({
     userId,
-    groupMessages: groupMessagesRef.current,
-  }), [userId]);
+    groupMessages,
+  }), [userId, groupMessages]);
 
   const {
     conversations,
@@ -133,9 +132,11 @@ export function CounselChat() {
     dismissSummaryPrompt,
   } = useCounsel(counselOptions);
 
-  // Update group messages ref so private chats have access to group context
-  // This needs to be updated synchronously to avoid stale closures
-  groupMessagesRef.current = messages;
+  // Sync group messages to state for private chat context
+  // Using useEffect to avoid render-phase state updates
+  useEffect(() => {
+    setGroupMessages(messages);
+  }, [messages]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
