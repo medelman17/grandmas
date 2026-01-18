@@ -3,8 +3,10 @@
 import { useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useCounsel } from "@/hooks/use-counsel";
+import { usePrivateMessages } from "@/hooks/use-private-messages";
 import { useUserId } from "@/hooks/use-user-id";
 import { CouncilHeader } from "./council-header";
+import { PrivateChatModal } from "./private-chat-modal";
 import { UserMessage } from "./user-message";
 import { GrandmaMessage } from "./grandma-message";
 import { TypingIndicators } from "./typing-indicators";
@@ -61,6 +63,18 @@ export function CounselChat() {
     dismissSummaryPrompt,
   } = useCounsel(userId);
 
+  // Private messaging hook
+  const {
+    conversations,
+    activeGrandma,
+    memoryActivities: privateMemoryActivities,
+    isLoading: isPrivateLoading,
+    unreadCounts,
+    openPrivateChat,
+    closePrivateChat,
+    sendPrivateMessage,
+  } = usePrivateMessages(userId);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   /**
@@ -94,7 +108,11 @@ export function CounselChat() {
   return (
     <div className="flex flex-col min-h-screen h-[100dvh] ambient-gradient relative noise-overlay">
       {/* Header */}
-      <CouncilHeader isDebating={isDebating} />
+      <CouncilHeader
+        isDebating={isDebating}
+        unreadCounts={unreadCounts}
+        onGrandmaClick={openPrivateChat}
+      />
 
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto">
@@ -254,6 +272,16 @@ export function CounselChat() {
         debatePauseReason={debatePauseReason}
         onContinueDebate={continueDebate}
         onEndDebate={endDebate}
+      />
+
+      {/* Private Chat Modal */}
+      <PrivateChatModal
+        grandmaId={activeGrandma}
+        conversation={activeGrandma ? conversations[activeGrandma] : null}
+        memoryActivities={privateMemoryActivities}
+        isLoading={isPrivateLoading}
+        onSendMessage={sendPrivateMessage}
+        onClose={closePrivateChat}
       />
     </div>
   );

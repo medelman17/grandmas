@@ -321,6 +321,8 @@ export function ChatInput({
                     "focus:outline-none",
                     "placeholder:text-zinc-600 text-sm text-white",
                     "transition-all duration-200",
+                    // Prevent wrapping to multiple lines on mobile
+                    "max-h-[44px] sm:max-h-32",
                     isLoading && "opacity-50 cursor-not-allowed"
                   )}
                 />

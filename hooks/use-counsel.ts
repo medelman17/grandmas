@@ -115,6 +115,9 @@ export function useCounsel(userId?: string | null) {
   const [isLoading, setIsLoading] = useState(false);
   const [debateRound, setDebateRound] = useState(0);
   const [debatePauseReason, setDebatePauseReason] = useState<string>("");
+  const [_recentDebateMessages, setRecentDebateMessages] = useState<
+    Array<{ grandmaId: GrandmaId; content: string; targetId?: GrandmaId }>
+  >([]);
   const [showSummaryPrompt, setShowSummaryPrompt] = useState(false);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [memoryActivities, setMemoryActivities] = useState<MemoryActivity[]>([]);
