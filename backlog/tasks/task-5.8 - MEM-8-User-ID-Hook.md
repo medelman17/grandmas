@@ -1,9 +1,10 @@
 ---
 id: task-5.8
 title: 'MEM-8: User ID Hook'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:12'
+updated_date: '2026-01-18 01:23'
 labels:
   - memory-system
   - hooks
@@ -22,8 +23,8 @@ Create client-side hook for managing anonymous user UUID with localStorage persi
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 useUserId() hook returns string | null
-- [ ] #2 Generates UUID on first visit
-- [ ] #3 Persists to localStorage
-- [ ] #4 Works with SSR (returns null initially, hydrates on client)
+- [x] #1 useUserId() hook returns string | null
+- [x] #2 Generates UUID on first visit
+- [x] #3 Persists to localStorage
+- [x] #4 Works with SSR (returns null initially, hydrates on client)
 <!-- AC:END -->

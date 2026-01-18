@@ -1,10 +1,10 @@
 ---
 id: task-5.10
 title: 'MEM-10: Grandma Memory Behaviors'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:12'
-updated_date: '2026-01-18 01:13'
+updated_date: '2026-01-18 01:23'
 labels:
   - memory-system
   - config
@@ -24,10 +24,10 @@ Add personality-specific memory instructions to each grandma config defining how
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 memoryBehavior field added to GrandmaConfig type
-- [ ] #2 Nana Ruth: thorough, contextual memory use
-- [ ] #3 Abuela Carmen: warm, relational memory focus
-- [ ] #4 Bà Nguyen: sparse but powerful memory references
-- [ ] #5 Grandma Edith: comprehensive, pointed recall
-- [ ] #6 Bibi Amara: strategic, results-oriented memory use
+- [x] #1 memoryBehavior field added to GrandmaConfig type
+- [x] #2 Nana Ruth: thorough, contextual memory use
+- [x] #3 Abuela Carmen: warm, relational memory focus
+- [x] #4 Bà Nguyen: sparse but powerful memory references
+- [x] #5 Grandma Edith: comprehensive, pointed recall
+- [x] #6 Bibi Amara: strategic, results-oriented memory use
 <!-- AC:END -->

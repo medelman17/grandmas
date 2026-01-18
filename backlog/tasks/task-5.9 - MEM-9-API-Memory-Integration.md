@@ -1,10 +1,10 @@
 ---
 id: task-5.9
 title: 'MEM-9: API Memory Integration'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:12'
-updated_date: '2026-01-18 01:13'
+updated_date: '2026-01-18 01:23'
 labels:
   - memory-system
   - api
@@ -24,8 +24,8 @@ Update the chat API route to include userId handling and memory tools for grandm
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 userId accepted in request body
-- [ ] #2 Memory tools created and passed to streamText
-- [ ] #3 maxSteps: 3 allows tool loops for memory operations
-- [ ] #4 Works gracefully without userId (tools omitted)
+- [x] #1 userId accepted in request body
+- [x] #2 Memory tools created and passed to streamText
+- [x] #3 maxSteps: 3 allows tool loops for memory operations
+- [x] #4 Works gracefully without userId (tools omitted)
 <!-- AC:END -->

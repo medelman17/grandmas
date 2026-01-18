@@ -1,9 +1,10 @@
 ---
 id: task-5.7
 title: 'MEM-7: User Identity Store'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:12'
+updated_date: '2026-01-18 01:23'
 labels:
   - memory-system
   - database
@@ -22,7 +23,7 @@ Create server-side user record management for anonymous users to associate memor
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 getOrCreate(userId) upserts user record
-- [ ] #2 Updates last_seen_at timestamp on activity
-- [ ] #3 exists(userId) check for validation
+- [x] #1 getOrCreate(userId) upserts user record
+- [x] #2 Updates last_seen_at timestamp on activity
+- [x] #3 exists(userId) check for validation
 <!-- AC:END -->

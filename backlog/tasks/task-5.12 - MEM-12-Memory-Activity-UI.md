@@ -1,10 +1,10 @@
 ---
 id: task-5.12
 title: 'MEM-12: Memory Activity UI'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:12'
-updated_date: '2026-01-18 01:13'
+updated_date: '2026-01-18 01:24'
 labels:
   - memory-system
   - ui
@@ -23,8 +23,8 @@ Create UI indicator showing when grandmas are accessing or saving memories for t
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 MemoryIndicator component shows searching/saving state
-- [ ] #2 Uses grandma's theme colors
-- [ ] #3 Animated pulse effect during memory operations
-- [ ] #4 Optional memory stats display for debugging
+- [x] #1 MemoryIndicator component shows searching/saving state
+- [x] #2 Uses grandma's theme colors
+- [x] #3 Animated pulse effect during memory operations
+- [x] #4 Optional memory stats display for debugging
 <!-- AC:END -->

@@ -1,10 +1,10 @@
 ---
 id: task-5.11
 title: 'MEM-11: Client Memory Integration'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:12'
-updated_date: '2026-01-18 01:13'
+updated_date: '2026-01-18 01:23'
 labels:
   - memory-system
   - hooks
@@ -25,7 +25,7 @@ Update client-side hooks and components to pass userId to API for memory-enabled
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 useCounsel accepts userId parameter
-- [ ] #2 streamGrandmaResponse includes userId in request
-- [ ] #3 Page component uses useUserId hook and passes to useCounsel
+- [x] #1 useCounsel accepts userId parameter
+- [x] #2 streamGrandmaResponse includes userId in request
+- [x] #3 Page component uses useUserId hook and passes to useCounsel
 <!-- AC:END -->

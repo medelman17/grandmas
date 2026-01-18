@@ -1,9 +1,10 @@
 ---
 id: task-5
 title: Memory System
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:09'
+updated_date: '2026-01-18 01:24'
 labels:
   - feature
   - database
@@ -21,11 +22,11 @@ Implement persistent memory allowing grandmas to remember facts about users acro
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Postgres database with pgvector stores user memories
-- [ ] #2 Memories searchable via semantic similarity
-- [ ] #3 AI SDK tools allow grandmas to search and create memories
-- [ ] #4 Each grandma has unique memory behavior matching personality
-- [ ] #5 Anonymous user identity managed via localStorage UUID
-- [ ] #6 Memory activity indicator shows when grandmas access memories
-- [ ] #7 Memories scoped per user-grandma pair
+- [x] #1 Postgres database with pgvector stores user memories
+- [x] #2 Memories searchable via semantic similarity
+- [x] #3 AI SDK tools allow grandmas to search and create memories
+- [x] #4 Each grandma has unique memory behavior matching personality
+- [x] #5 Anonymous user identity managed via localStorage UUID
+- [x] #6 Memory activity indicator shows when grandmas access memories
+- [x] #7 Memories scoped per user-grandma pair
 <!-- AC:END -->

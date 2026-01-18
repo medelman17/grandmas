@@ -1,10 +1,10 @@
 ---
 id: task-5.4
 title: 'MEM-4: Embedding Utility'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:12'
-updated_date: '2026-01-18 01:13'
+updated_date: '2026-01-18 01:23'
 labels:
   - memory-system
   - ai
@@ -24,8 +24,8 @@ Create utility for generating text embeddings using OpenAI's text-embedding-3-sm
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Uses OpenAI text-embedding-3-small model
-- [ ] #2 generateEmbedding(text) returns number[] of 1536 dimensions
-- [ ] #3 generateEmbeddings(texts) for efficient batching
-- [ ] #4 Proper error handling for API failures
+- [x] #1 Uses OpenAI text-embedding-3-small model
+- [x] #2 generateEmbedding(text) returns number[] of 1536 dimensions
+- [x] #3 generateEmbeddings(texts) for efficient batching
+- [x] #4 Proper error handling for API failures
 <!-- AC:END -->
