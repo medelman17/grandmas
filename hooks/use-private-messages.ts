@@ -6,6 +6,7 @@ import {
   PrivateMessage,
   PrivateConversation,
   MemoryActivity,
+  CounselMessage,
 } from "@/lib/types";
 import { GRANDMAS, GRANDMA_IDS } from "@/lib/grandmas";
 
@@ -66,6 +67,30 @@ function randomDelay(min: number, max: number): number {
 }
 
 /**
+ * Generate a transcript from group chat messages for context
+ */
+function generateGroupChatTranscript(messages: CounselMessage[]): string {
+  // Get last 15 messages for good context
+  const recentMsgs = messages.slice(-15);
+  return recentMsgs
+    .map((msg) => {
+      if (msg.type === "user") {
+        return `User: ${msg.content}`;
+      }
+      if (msg.type === "grandma" && msg.grandmaId) {
+        const grandma = GRANDMAS[msg.grandmaId];
+        const prefix = msg.replyingTo
+          ? `${grandma.name} (replying to ${GRANDMAS[msg.replyingTo].name})`
+          : grandma.name;
+        return `${prefix}: ${msg.content}`;
+      }
+      return null;
+    })
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+/**
  * Response delays for each grandma in private chat (slightly faster than group)
  */
 const PRIVATE_RESPONSE_DELAYS: Record<GrandmaId, { min: number; max: number }> = {
@@ -94,9 +119,19 @@ function initializeConversations(): Record<GrandmaId, PrivateConversation> {
 }
 
 /**
+ * Options for the usePrivateMessages hook
+ */
+interface UsePrivateMessagesOptions {
+  userId?: string | null;
+  /** Group chat messages for context - grandmas will know what was discussed */
+  groupMessages?: CounselMessage[];
+}
+
+/**
  * Hook for managing private conversations with individual grandmas
  */
-export function usePrivateMessages(userId?: string | null) {
+export function usePrivateMessages(options: UsePrivateMessagesOptions = {}) {
+  const { userId, groupMessages = [] } = options;
   const [conversations, setConversations] = useState<Record<GrandmaId, PrivateConversation>>(
     initializeConversations
   );
@@ -106,6 +141,10 @@ export function usePrivateMessages(userId?: string | null) {
 
   // Track active streaming controllers for cleanup
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
+
+  // Keep group messages in a ref to avoid stale closures in callbacks
+  const groupMessagesRef = useRef<CounselMessage[]>(groupMessages);
+  groupMessagesRef.current = groupMessages;
 
   /**
    * Get total unread count across all grandmas
@@ -181,6 +220,12 @@ export function usePrivateMessages(userId?: string | null) {
           apiMessages.push({ role: "user" as const, content: userMessage });
         }
 
+        // Generate group chat context for user-initiated messages (not proactive)
+        // This gives the grandma knowledge of what was discussed in the group
+        const groupChatContext = !proactiveContext && groupMessagesRef.current.length > 0
+          ? generateGroupChatTranscript(groupMessagesRef.current)
+          : undefined;
+
         const response = await fetch("/api/private-chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -190,6 +235,7 @@ export function usePrivateMessages(userId?: string | null) {
             grandmaId,
             userId: userId || undefined,
             proactiveContext,
+            groupChatContext,
           }),
         });
 

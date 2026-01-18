@@ -14,7 +14,7 @@ import { MemoryIndicators } from "./memory-indicator";
 import { ChatInput } from "./chat-input";
 import { GRANDMA_IDS, GRANDMAS } from "@/lib/grandmas";
 import { cn } from "@/lib/utils";
-import { GrandmaId } from "@/lib/types";
+import { GrandmaId, CounselMessage } from "@/lib/types";
 import { Markdown } from "./markdown";
 import { SummaryPrompt } from "./summary-prompt";
 import { ScrollToBottomButton } from "./scroll-to-bottom-button";
@@ -47,7 +47,17 @@ export function CounselChat() {
   // Get persistent anonymous user ID for memory features
   const { userId } = useUserId();
 
+  // Track group messages for private chat context
+  // This ref will be updated after useCounsel is called
+  const groupMessagesRef = useRef<CounselMessage[]>([]);
+
   // Private messaging hook - called first so we can wire up the proactive callback
+  // Note: Group messages are passed via ref that gets updated after useCounsel
+  const privateMessagesOptions = useMemo(() => ({
+    userId,
+    groupMessages: groupMessagesRef.current,
+  }), [userId]);
+
   const {
     conversations,
     activeGrandma,
@@ -58,7 +68,7 @@ export function CounselChat() {
     closePrivateChat,
     sendPrivateMessage,
     triggerProactiveMessage,
-  } = usePrivateMessages(userId);
+  } = usePrivateMessages(privateMessagesOptions);
 
   // Create proactive message callback
   // Uses useCallback to prevent unnecessary re-renders of useCounsel
@@ -95,6 +105,10 @@ export function CounselChat() {
     requestMeetingSummary,
     dismissSummaryPrompt,
   } = useCounsel(counselOptions);
+
+  // Update group messages ref so private chats have access to group context
+  // This needs to be updated synchronously to avoid stale closures
+  groupMessagesRef.current = messages;
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);

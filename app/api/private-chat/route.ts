@@ -15,7 +15,11 @@ const model = gateway("anthropic/claude-sonnet-4");
  * Get private chat system prompt for a grandma
  * This is more intimate/personal than the group chat prompt
  */
-function getPrivateChatPrompt(grandmaId: string, proactiveContext?: { groupDiscussion: string; triggerReason: string }): string {
+function getPrivateChatPrompt(
+  grandmaId: string,
+  proactiveContext?: { groupDiscussion: string; triggerReason: string },
+  groupChatContext?: string
+): string {
   const grandma = GRANDMAS[grandmaId as keyof typeof GRANDMAS];
   if (!grandma) return "";
 
@@ -47,6 +51,16 @@ Why you're reaching out privately:
 ${proactiveContext.triggerReason}
 
 Start your message naturally - you might reference what happened in the group, share something you didn't want to say in front of the others, or just check in on them. Be genuine and caring in your own unique way.`;
+  } else if (groupChatContext) {
+    // Add group chat context for user-initiated private chats
+    basePrompt += `
+
+GROUP CHAT CONTEXT: Here's what was recently discussed in the group counsel chat. You were part of this conversation and remember it well. If the user references something from the group chat, you can discuss it naturally.
+
+Recent group discussion:
+${groupChatContext}
+
+You can reference specific things you or other grandmas said, share follow-up thoughts you didn't mention in the group, or discuss any topic from the group chat. Be natural - you remember all of this as if you were just there (because you were!).`;
   }
 
   return basePrompt;
@@ -55,7 +69,7 @@ Start your message naturally - you might reference what happened in the group, s
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as PrivateChatRequest;
-    const { messages, grandmaId, userId, proactiveContext } = body;
+    const { messages, grandmaId, userId, proactiveContext, groupChatContext } = body;
 
     // Validate request
     if (!messages || !Array.isArray(messages)) {
@@ -73,7 +87,7 @@ export async function POST(req: Request) {
     }
 
     const grandma = GRANDMAS[grandmaId];
-    let systemPrompt = getPrivateChatPrompt(grandmaId, proactiveContext);
+    let systemPrompt = getPrivateChatPrompt(grandmaId, proactiveContext, groupChatContext);
 
     // Validate user and get/create their record
     let validatedUserId: string | null = null;

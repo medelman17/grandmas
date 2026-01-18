@@ -170,4 +170,6 @@ export interface PrivateChatRequest {
     groupDiscussion: string;
     triggerReason: string;
   };
+  /** Recent group chat transcript for context in user-initiated private chats */
+  groupChatContext?: string;
 }
