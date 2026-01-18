@@ -33,6 +33,64 @@ export interface GrandmaConfig {
 }
 
 /**
+ * Types of relationships between grandmas
+ * - ally: Genuine fondness, will defend and support
+ * - frenemy: Surface-level politeness hiding rivalry
+ * - irritated: Finds the other annoying but tolerates
+ * - worried: Maternal concern, thinks they need guidance
+ * - dismissive: Doesn't take the other seriously
+ */
+export type RelationshipType =
+  | "ally"
+  | "frenemy"
+  | "irritated"
+  | "worried"
+  | "dismissive";
+
+/**
+ * A grandma's relationship with another grandma
+ */
+export interface GrandmaRelationship {
+  /** The grandma this relationship is about */
+  target: GrandmaId;
+  /** Type of relationship */
+  type: RelationshipType;
+  /** What this grandma privately thinks (used in gossip) */
+  privateOpinion: string;
+  /** Topics that trigger gossip about this grandma */
+  triggerTopics: string[];
+}
+
+/**
+ * Types of events that can trigger alliance gossip
+ * - post-debate: Ally was attacked/criticized in a debate
+ * - outnumbered: Ally was ganged up on (2+ grandmas against her)
+ * - harsh-criticism: Someone the gossiper dislikes got roasted
+ * - random: Low-probability spontaneous gossip about ally
+ */
+export type AllianceTriggerType =
+  | "post-debate"
+  | "outnumbered"
+  | "harsh-criticism"
+  | "random";
+
+/**
+ * A triggered alliance gossip opportunity
+ */
+export interface AllianceTrigger {
+  /** Type of trigger that fired */
+  triggerType: AllianceTriggerType;
+  /** Grandma who will send the gossip */
+  fromGrandma: GrandmaId;
+  /** Grandma being gossiped about */
+  aboutGrandma: GrandmaId;
+  /** Brief context for the gossip prompt */
+  context: string;
+  /** Relevant snippet from the debate that triggered this */
+  debateSnippet?: string;
+}
+
+/**
  * Message types in the counsel chat
  */
 export type MessageType = "user" | "grandma" | "system";
@@ -126,6 +184,8 @@ export interface PrivateMessage {
   isStreaming?: boolean;
   /** True if this message was initiated proactively by the grandma */
   isProactive?: boolean;
+  /** True if this is an alliance gossip message */
+  isAlliance?: boolean;
 }
 
 /**
@@ -172,4 +232,15 @@ export interface PrivateChatRequest {
   };
   /** Recent group chat transcript for context in user-initiated private chats */
   groupChatContext?: string;
+  /** Context for alliance gossip messages */
+  allianceContext?: {
+    /** The grandma being gossiped about */
+    aboutGrandma: GrandmaId;
+    /** Type of trigger that caused this gossip */
+    triggerType: AllianceTriggerType;
+    /** Context about what happened */
+    context: string;
+    /** Snippet from debate if relevant */
+    debateSnippet?: string;
+  };
 }

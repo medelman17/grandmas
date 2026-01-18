@@ -1,9 +1,10 @@
 ---
 id: task-3.2.3
 title: 'ALLY-2c: Outnumbered Trigger Detection'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:39'
+updated_date: '2026-01-18 01:46'
 labels:
   - alliances
   - logic

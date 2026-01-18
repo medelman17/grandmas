@@ -1,9 +1,10 @@
 ---
 id: task-3.2.1
 title: 'ALLY-2a: AllianceTrigger Interface & Types'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:39'
+updated_date: '2026-01-18 01:45'
 labels:
   - alliances
   - types

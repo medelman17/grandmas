@@ -1,7 +1,7 @@
 import { streamText, stepCountIs } from "ai";
 import { gateway } from "@ai-sdk/gateway";
-import { GRANDMAS } from "@/lib/grandmas";
-import { PrivateChatRequest } from "@/lib/types";
+import { GRANDMAS, getRelationship } from "@/lib/grandmas";
+import { PrivateChatRequest, GrandmaId, AllianceTriggerType } from "@/lib/types";
 import { createMemoryTools } from "@/lib/memory";
 import { getOrCreateUser } from "@/lib/user/store";
 
@@ -66,10 +66,75 @@ You can reference specific things you or other grandmas said, share follow-up th
   return basePrompt;
 }
 
+/**
+ * Build system prompt for alliance gossip messages
+ * Uses relationship data to create personality-specific gossip
+ */
+function getAllianceGossipPrompt(
+  grandmaId: GrandmaId,
+  aboutGrandma: GrandmaId,
+  triggerType: AllianceTriggerType,
+  context: string,
+  debateSnippet?: string
+): string {
+  const grandma = GRANDMAS[grandmaId];
+  const targetGrandma = GRANDMAS[aboutGrandma];
+  const relationship = getRelationship(grandmaId, aboutGrandma);
+
+  if (!grandma || !targetGrandma || !relationship) {
+    return "";
+  }
+
+  let basePrompt = grandma.systemPrompt;
+
+  // Determine gossip tone based on trigger type and relationship
+  let gossipTone = "";
+  switch (triggerType) {
+    case "post-debate":
+      if (relationship.type === "ally") {
+        gossipTone = `You're reaching out to privately support your friend ${targetGrandma.name}. You saw how she was treated in the debate and it bothered you. Share your sympathy and solidarity.`;
+      }
+      break;
+    case "outnumbered":
+      gossipTone = `${targetGrandma.name} was ganged up on by multiple grandmas. You feel protective and want to privately reassure this person that ${targetGrandma.name} didn't deserve that.`;
+      break;
+    case "harsh-criticism":
+      if (relationship.type === "irritated" || relationship.type === "frenemy") {
+        gossipTone = `You're secretly pleased that ${targetGrandma.name} got called out. Share a bit of gleeful gossip with this person - nothing too mean, but let them know you noticed and maybe weren't too sad about it.`;
+      }
+      break;
+    case "random":
+      gossipTone = `You're just thinking about ${targetGrandma.name} and want to share a private thought or observation about her with this person.`;
+      break;
+  }
+
+  const allianceModifier = `
+
+ALLIANCE GOSSIP MODE: You're sending a private gossip message about ${targetGrandma.name}.
+
+Your private opinion of ${targetGrandma.name}: "${relationship.privateOpinion}"
+
+${gossipTone}
+
+${context}
+
+${debateSnippet ? `What was said: "${debateSnippet}..."` : ""}
+
+IMPORTANT GUIDELINES:
+- Start with something like "Between you and me..." or "Can I tell you something?" or "Just between us..."
+- Keep it SHORT - 1-2 sentences of actual gossip
+- Stay in character - your gossip should sound like YOU
+- Don't be too mean - this is grandma gossip, not bullying
+- Make it feel like a secret shared between friends
+- This is a 🤫 moment - you wouldn't say this in front of the other grandmas`;
+
+  return basePrompt + allianceModifier;
+}
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as PrivateChatRequest;
-    const { messages, grandmaId, userId, proactiveContext, groupChatContext } = body;
+    const { messages, grandmaId, userId, proactiveContext, groupChatContext, allianceContext } = body;
 
     // Validate request
     if (!messages || !Array.isArray(messages)) {
@@ -87,7 +152,22 @@ export async function POST(req: Request) {
     }
 
     const grandma = GRANDMAS[grandmaId];
-    let systemPrompt = getPrivateChatPrompt(grandmaId, proactiveContext, groupChatContext);
+
+    // Determine which system prompt to use based on context type
+    let systemPrompt: string;
+    if (allianceContext) {
+      // Alliance gossip message - use gossip-specific prompt
+      systemPrompt = getAllianceGossipPrompt(
+        grandmaId,
+        allianceContext.aboutGrandma,
+        allianceContext.triggerType,
+        allianceContext.context,
+        allianceContext.debateSnippet
+      );
+    } else {
+      // Regular private chat or proactive message (with optional group context)
+      systemPrompt = getPrivateChatPrompt(grandmaId, proactiveContext, groupChatContext);
+    }
 
     // Validate user and get/create their record
     let validatedUserId: string | null = null;

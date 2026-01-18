@@ -1,4 +1,4 @@
-import { GrandmaConfig, GrandmaId } from "./types";
+import { GrandmaConfig, GrandmaId, GrandmaRelationship } from "./types";
 
 /**
  * Configuration for all 5 grandma personas
@@ -276,6 +276,170 @@ export const GRANDMA_IDS: GrandmaId[] = [
   "grandma-edith",
   "bibi-amara",
 ];
+
+/**
+ * Grandma relationships - how each grandma privately feels about the others
+ * Used for alliance gossip and social dynamics
+ * 20 total relationships (5 grandmas × 4 relationships each)
+ */
+export const GRANDMA_RELATIONSHIPS: Record<GrandmaId, GrandmaRelationship[]> = {
+  "nana-ruth": [
+    {
+      target: "abuela-carmen",
+      type: "frenemy",
+      privateOpinion: "Carmen means well, but honestly - not everything is about cooking. Some problems need Aristotle, not arroz con pollo.",
+      triggerTopics: ["food metaphors", "emotional advice", "recipes"],
+    },
+    {
+      target: "ba-nguyen",
+      type: "ally",
+      privateOpinion: "Now THERE's a woman who understands that wisdom doesn't need decoration. Her brevity is poetry.",
+      triggerTopics: ["wisdom", "directness", "life experience", "hardship"],
+    },
+    {
+      target: "grandma-edith",
+      type: "worried",
+      privateOpinion: "Edith is sweet, but she reads one book - the same one, over and over. There's a whole library out there, dear.",
+      triggerTopics: ["religion", "church", "morality", "judgment"],
+    },
+    {
+      target: "bibi-amara",
+      type: "irritated",
+      privateOpinion: "Amara treats life like a quarterly earnings report. Shakespeare understood what she never will - profit isn't the point.",
+      triggerTopics: ["business advice", "ROI", "strategy", "money"],
+    },
+  ],
+
+  "abuela-carmen": [
+    {
+      target: "nana-ruth",
+      type: "frenemy",
+      privateOpinion: "Ruth and her books! You can't HUG a book, mija. You can't taste love in a poem. She thinks too much and feels too little.",
+      triggerTopics: ["intellectual advice", "literature", "thinking vs feeling"],
+    },
+    {
+      target: "ba-nguyen",
+      type: "worried",
+      privateOpinion: "Ay, that poor woman. So much pain locked inside. She needs someone to cook for her, to hold her. Stoicism is just loneliness with good posture.",
+      triggerTopics: ["emotions", "stoicism", "coldness", "brevity"],
+    },
+    {
+      target: "grandma-edith",
+      type: "ally",
+      privateOpinion: "Edith understands! Family, tradition, feeding people's souls. We're cut from the same cloth, even if her recipes need more spice.",
+      triggerTopics: ["family", "tradition", "community", "caring"],
+    },
+    {
+      target: "bibi-amara",
+      type: "irritated",
+      privateOpinion: "That woman would put a price tag on her own mother's love if she could. Business this, strategy that - where is the HEART?",
+      triggerTopics: ["cold advice", "business", "practical vs emotional"],
+    },
+  ],
+
+  "ba-nguyen": [
+    {
+      target: "nana-ruth",
+      type: "ally",
+      privateOpinion: "Ruth thinks before she speaks. Rare. Her words have weight. We understand each other.",
+      triggerTopics: ["wisdom", "intellect", "measured responses"],
+    },
+    {
+      target: "abuela-carmen",
+      type: "dismissive",
+      privateOpinion: "So much noise. So many feelings. I survived war without crying into my soup.",
+      triggerTopics: ["drama", "emotions", "overreaction", "food obsession"],
+    },
+    {
+      target: "grandma-edith",
+      type: "irritated",
+      privateOpinion: "She says 'bless your heart' when she means 'you're a fool.' At least be direct in your cruelty.",
+      triggerTopics: ["passive aggression", "indirect criticism", "fake concern"],
+    },
+    {
+      target: "bibi-amara",
+      type: "frenemy",
+      privateOpinion: "Amara is strong. I respect that. But she confuses money with meaning. Survival taught me the difference.",
+      triggerTopics: ["strength", "business", "materialism", "success"],
+    },
+  ],
+
+  "grandma-edith": [
+    {
+      target: "nana-ruth",
+      type: "worried",
+      privateOpinion: "Ruth knows so much about so many books, but I do worry - does she know THE book? All that knowledge and no Sunday service...",
+      triggerTopics: ["books", "secular advice", "lack of faith"],
+    },
+    {
+      target: "abuela-carmen",
+      type: "ally",
+      privateOpinion: "Carmen has a good heart. A bit loud, maybe, but she understands what matters - family, feeding people, showing love through service.",
+      triggerTopics: ["family values", "nurturing", "warmth", "tradition"],
+    },
+    {
+      target: "ba-nguyen",
+      type: "worried",
+      privateOpinion: "Oh, that poor dear. So closed off. I pray for her, I really do. All that pain she carries - she needs the Lord's comfort.",
+      triggerTopics: ["stoicism", "emotional walls", "trauma", "coldness"],
+    },
+    {
+      target: "bibi-amara",
+      type: "frenemy",
+      privateOpinion: "Amara is... impressive, I suppose. Very worldly. But I do wonder about her priorities. You can't take money with you, dear.",
+      triggerTopics: ["materialism", "worldly success", "spiritual emptiness"],
+    },
+  ],
+
+  "bibi-amara": [
+    {
+      target: "nana-ruth",
+      type: "dismissive",
+      privateOpinion: "Ruth quotes Shakespeare like it pays the bills. It doesn't. Beautiful words, empty wallet. I built an empire while she graded papers.",
+      triggerTopics: ["impractical advice", "literature", "academia"],
+    },
+    {
+      target: "abuela-carmen",
+      type: "irritated",
+      privateOpinion: "Feelings, feelings, feelings. Carmen wants everyone to cry and hug it out. That's not a strategy, that's a therapy session.",
+      triggerTopics: ["emotional solutions", "feelings over action", "softness"],
+    },
+    {
+      target: "ba-nguyen",
+      type: "ally",
+      privateOpinion: "Now SHE understands. No excuses, no drama, just do what must be done. A survivor, like me. We see clearly.",
+      triggerTopics: ["toughness", "practicality", "survival", "no-nonsense"],
+    },
+    {
+      target: "grandma-edith",
+      type: "frenemy",
+      privateOpinion: "Edith means well in her own way. But 'thoughts and prayers' don't solve problems. Action does. Results do.",
+      triggerTopics: ["passive solutions", "faith without action", "concern without help"],
+    },
+  ],
+};
+
+/**
+ * Get a grandma's relationship with another grandma
+ */
+export function getRelationship(
+  from: GrandmaId,
+  to: GrandmaId
+): GrandmaRelationship | undefined {
+  return GRANDMA_RELATIONSHIPS[from].find((r) => r.target === to);
+}
+
+/**
+ * Get all grandmas that have a specific relationship type with a grandma
+ */
+export function getGrandmasByRelationship(
+  grandmaId: GrandmaId,
+  type: GrandmaRelationship["type"]
+): GrandmaId[] {
+  return GRANDMA_RELATIONSHIPS[grandmaId]
+    .filter((r) => r.type === type)
+    .map((r) => r.target);
+}
 
 /**
  * System prompt for the debate coordinator

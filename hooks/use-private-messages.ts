@@ -7,6 +7,7 @@ import {
   PrivateConversation,
   MemoryActivity,
   CounselMessage,
+  AllianceTrigger,
 } from "@/lib/types";
 import { GRANDMAS, GRANDMA_IDS } from "@/lib/grandmas";
 
@@ -191,7 +192,13 @@ export function usePrivateMessages(options: UsePrivateMessagesOptions = {}) {
       grandmaId: GrandmaId,
       userMessage: string,
       conversationHistory: PrivateMessage[],
-      proactiveContext?: { groupDiscussion: string; triggerReason: string }
+      proactiveContext?: { groupDiscussion: string; triggerReason: string },
+      allianceContext?: {
+        aboutGrandma: GrandmaId;
+        triggerType: string;
+        context: string;
+        debateSnippet?: string;
+      }
     ): Promise<string> => {
       const controller = new AbortController();
       const messageId = generateId();
@@ -236,6 +243,7 @@ export function usePrivateMessages(options: UsePrivateMessagesOptions = {}) {
             userId: userId || undefined,
             proactiveContext,
             groupChatContext,
+            allianceContext,
           }),
         });
 
@@ -309,6 +317,7 @@ export function usePrivateMessages(options: UsePrivateMessagesOptions = {}) {
           content: fullContent,
           timestamp: Date.now(),
           isProactive: !!proactiveContext,
+          isAlliance: !!allianceContext,
         };
 
         setConversations((prev) => ({
@@ -431,6 +440,30 @@ export function usePrivateMessages(options: UsePrivateMessagesOptions = {}) {
   );
 
   /**
+   * Trigger an alliance gossip message from a grandma
+   * (called when grandma wants to share gossip about another grandma)
+   */
+  const triggerAllianceMessage = useCallback(
+    async (trigger: AllianceTrigger) => {
+      const history = conversations[trigger.fromGrandma].messages;
+
+      await streamPrivateResponse(
+        trigger.fromGrandma,
+        "",
+        history,
+        undefined, // no proactive context
+        {
+          aboutGrandma: trigger.aboutGrandma,
+          triggerType: trigger.triggerType,
+          context: trigger.context,
+          debateSnippet: trigger.debateSnippet,
+        }
+      );
+    },
+    [conversations, streamPrivateResponse]
+  );
+
+  /**
    * Clear conversation with a specific grandma
    */
   const clearConversation = useCallback((grandmaId: GrandmaId) => {
@@ -464,6 +497,7 @@ export function usePrivateMessages(options: UsePrivateMessagesOptions = {}) {
     closePrivateChat,
     sendPrivateMessage,
     triggerProactiveMessage,
+    triggerAllianceMessage,
     clearConversation,
     clearAllConversations,
   };
