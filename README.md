@@ -1,188 +1,201 @@
 # Counsel of Grandmas
 
-> **5 AI grandmas with very different perspectives, ready to give you advice about life, love, and that thing you're definitely overthinking.**
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16.1-black?style=flat-square&logo=next.js" alt="Next.js 16" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react" alt="React 19" />
+  <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Vercel_AI_SDK-6.x-000?style=flat-square&logo=vercel" alt="Vercel AI SDK" />
+  <img src="https://img.shields.io/badge/Tailwind-4.x-38B2AC?style=flat-square&logo=tailwindcss" alt="Tailwind CSS" />
+</p>
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmedelman17%2Fgrandmas)
+<p align="center">
+  <strong>A multi-agent AI chat application demonstrating advanced streaming patterns, real-time orchestration, and emergent social dynamics.</strong>
+</p>
 
-**Live Demo:** [bubbeh.vercel.app](https://bubbeh.vercel.app)
-
----
-
-## Overview
-
-Counsel of Grandmas is a multi-agent AI chat application where five distinct grandma personas respond to your questions in parallel, then engage in dynamic debates when they disagree. Built with Next.js 16, React 19, and the Vercel AI SDK, it showcases advanced streaming patterns, personality-driven AI orchestration, and real-time message management.
-
-### Key Features
-
-- **Multi-Agent Parallel Responses** — 5 grandmas answer simultaneously with personality-based timing
-- **Intelligent Debate System** — Coordinator AI detects disagreements and triggers realistic arguments
-- **iMessage-Style Messaging** — Messages appear complete for better readability
-- **Reply Threading** — Quote previews show who's responding to whom
-- **Meeting Minutes Generator** — Formal corporate-style summary of advice sessions
-- **Glassmorphic Dark UI** — Modern blur effects with persona-specific glow colors
+<p align="center">
+  <a href="https://bubbeh.vercel.app"><strong>Live Demo</strong></a> ·
+  <a href="#architecture"><strong>Architecture</strong></a> ·
+  <a href="#features"><strong>Features</strong></a> ·
+  <a href="#technical-highlights"><strong>Technical Highlights</strong></a>
+</p>
 
 ---
 
-## Table of Contents
+## The Concept
 
-- [The Grandmas](#the-grandmas)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-  - [Multi-Agent Parallel Streaming](#multi-agent-parallel-streaming)
-  - [Debate System](#debate-system)
-  - [Message Flow](#message-flow)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Environment Variables](#environment-variables)
-- [Project Structure](#project-structure)
-- [API Reference](#api-reference)
-- [Components](#components)
-- [Hooks](#hooks)
-- [Type Definitions](#type-definitions)
-- [Styling & Theme](#styling--theme)
-- [Deployment](#deployment)
-- [Performance Optimizations](#performance-optimizations)
-- [Contributing](#contributing)
-  - [Development with Serena (Optional)](#development-with-serena-optional)
-- [License](#license)
+Five AI grandmas with distinct personalities, cultural backgrounds, and relationship dynamics provide advice on life's questions. What starts as parallel responses can evolve into heated debates, private side conversations, and secret gossip — creating an emergent social simulation that feels surprisingly alive.
+
+> *"Should I quit my job to pursue my passion?"*
+>
+> Watch as Bibi Amara (Lagos CEO) and Abuela Carmen (Mexico City restaurateur) clash over spreadsheets vs. soul, while Bà Nguyen (Saigon survivor) delivers a cutting one-liner that ends the debate entirely.
 
 ---
 
-## The Grandmas
+## Technical Highlights
 
-Each grandma has a unique personality, response style, and debate triggers:
+This project demonstrates solutions to several non-trivial engineering challenges:
 
-| ID | Name | Emoji | Personality | Signature Style |
-|----|------|-------|-------------|-----------------|
-| `nana-ruth` | **Nana Ruth** | 💬 | Brooklyn teacher, 40 years | Literary references, grammar corrections, withering when challenged |
-| `abuela-carmen` | **Abuela Carmen** | 🌶️ | Mexico City restaurateur | Food metaphors, Spanish phrases, scorching when provoked |
-| `ba-nguyen` | **Bà Nguyen** | 🌿 | Saigon war survivor | Stoic brevity (1-2 sentences MAX), cutting wisdom |
-| `grandma-edith` | **Grandma Edith** | ⛪ | Minnesota church organist | Passive-aggressive concern, moral judgment, weaponized worry |
-| `bibi-amara` | **Bibi Amara** | 👑 | Lagos businesswoman, CEO | Strategic no-nonsense, imperious when questioned |
+| Challenge | Solution |
+|-----------|----------|
+| **5 parallel AI streams** | Custom orchestration with personality-based timing variance, `AbortController` cleanup, and race condition handling |
+| **Multi-agent coordination** | Coordinator AI analyzes all responses for disagreements, triggers debate chains up to 5 rounds automatically |
+| **Persistent memory** | Per-user memory storage with grandma-specific recall patterns (Bà Nguyen remembers silently, Abuela Carmen references recipes) |
+| **Social dynamics simulation** | 20 inter-grandma relationships drive gossip triggers, alliance formation, and rivalry behaviors |
+| **Real-time state management** | Complex state machine handling typing indicators, debate queues, proactive messaging, and alliance timers simultaneously |
+| **Edge-optimized streaming** | Custom data stream parsing for tool events (memory operations) interleaved with text generation |
 
-### Known Debate Tensions
+### By the Numbers
 
-The AI coordinator is aware of these relationship dynamics and will trigger arguments:
-
-- **Bibi vs Abuela**: "Spreadsheets can't measure love" vs "Feelings don't pay bills"
-- **Bà vs Anyone Dramatic**: One cutting sentence destroys paragraphs of emotion
-- **Grandma Edith vs Bibi**: "I worry about your soul" vs "Worry is not a strategy"
-- **Nana Ruth vs Bibi**: "Shakespeare understood profit's limits" vs "Shakespeare died broke"
-- **Abuela vs Bà**: "Have you no heart?!" vs "Survived war without crying"
+```
+├── 5 distinct AI personas with 200+ line system prompts each
+├── 20 inter-grandma relationships (ally, frenemy, irritated, worried, dismissive)
+├── 4 trigger types for alliance gossip (post-debate, outnumbered, harsh-criticism, random)
+├── 3 API modes (single response, coordinator, summary generation)
+├── ~2,500 lines of orchestration logic across hooks
+└── Real-time coordination of 10+ concurrent state variables
+```
 
 ---
 
-## Tech Stack
+## Features
 
-### Core Framework
-| Package | Version | Purpose |
-|---------|---------|---------|
-| Next.js | 16.1.3 | App Router, Edge Runtime |
-| React | 19.x | Concurrent features |
-| TypeScript | 5.x | Type safety |
+### Multi-Agent Parallel Responses
+Five grandmas respond simultaneously with personality-driven timing. Abuela Carmen fires off quick, passionate takes while Bibi Amara takes her time crafting strategic advice.
 
-### AI & Streaming
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `ai` (Vercel AI SDK) | 6.x | Unified AI interface |
-| `@ai-sdk/gateway` | 3.x | Vercel AI Gateway routing |
-| `@ai-sdk/anthropic` | 3.x | Claude model access |
+### Intelligent Debate System
+A coordinator AI detects disagreements and known tension points, triggering realistic back-and-forth arguments. The system respects natural conversation flow with `shouldPause` signals.
 
-### Styling & UI
-| Package | Version | Purpose |
-|---------|---------|---------|
-| Tailwind CSS | 4.x | CSS-first configuration |
-| `@tailwindcss/typography` | 0.5.x | Prose styling for markdown |
-| Framer Motion | 12.x | Animations and transitions |
-| `react-markdown` | 10.x | Markdown rendering |
+### Private Messaging with Context
+Click any grandma's avatar to open a private 1:1 chat. She knows what happened in the group discussion and can share things she wouldn't say in front of the others.
+
+### Proactive Outreach
+After emotionally charged discussions, grandmas may reach out privately — not because you asked, but because they sensed you needed to talk.
+
+### Secret Alliances & Gossip
+Grandmas have private opinions about each other. After debates, allies may send you gossip about what happened:
+> *"🤫 Between you and me... Carmen means well, but not everything needs to be a cooking metaphor."*
+
+### Memory System
+Grandmas remember you across sessions. Nana Ruth recalls your career aspirations. Abuela Carmen remembers you mentioned your grandmother's recipes. Bà Nguyen remembers silently but reveals it when relevant.
+
+### Meeting Minutes
+End a session with formal corporate-style meeting minutes summarizing the advice, key tensions, and action items.
 
 ---
 
 ## Architecture
 
-### Multi-Agent Parallel Streaming
+### Multi-Agent Orchestration Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        User Question                             │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   5 Parallel Fetch Requests                      │
-│                                                                  │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐│
-│  │Nana Ruth │ │ Abuela   │ │    Bà    │ │  Edith   │ │  Bibi  ││
-│  │ 1.2-3s   │ │ 0.8-2s   │ │ 1.7-3.7s │ │  1-2.5s  │ │ 2-5s   ││
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └────────┘│
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              Coordinator Analyzes All 5 Responses                │
-│                                                                  │
-│   • Detects disagreements between grandmas                       │
-│   • Identifies known tension points                              │
-│   • Returns DebateInstruction[] if conflicts found               │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                     ┌────────┴────────┐
-                     ▼                 ▼
-              [No Debates]      [Debates Found]
-                     │                 │
-                     ▼                 ▼
-                  Done           Debate Loop
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           User Question                                  │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    5 Parallel Streaming Requests                         │
+│                                                                          │
+│   ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐      │
+│   │  Ruth   │  │ Carmen  │  │   Bà    │  │  Edith  │  │  Bibi   │      │
+│   │ 1.2-3s  │  │ 0.8-2s  │  │ 1.7-3.7s│  │  1-2.5s │  │  2-5s   │      │
+│   └─────────┘  └─────────┘  └─────────┘  └─────────┘  └─────────┘      │
+│                     (personality-based timing variance)                  │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                  Coordinator Analysis (mode: "coordinator")              │
+│                                                                          │
+│   • Analyzes all 5 responses for disagreements                          │
+│   • Checks known tension points (Bibi vs Abuela, Bà vs drama, etc.)     │
+│   • Returns DebateInstruction[] or signals natural pause                 │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                    ┌───────────────┴───────────────┐
+                    ▼                               ▼
+             [No Debates]                    [Debates Found]
+                    │                               │
+                    ▼                               ▼
+┌──────────────────────────┐       ┌──────────────────────────────────────┐
+│   Proactive Check        │       │         Automatic Debate Loop         │
+│   (35% per grandma)      │       │                                       │
+│                          │       │   Round 1 → Check reactions → Round 2 │
+│   "Should I reach out    │       │   → ... up to 5 rounds → Pause check  │
+│    privately?"           │       │                                       │
+└──────────────────────────┘       └──────────────────────────────────────┘
+                    │                               │
+                    ▼                               ▼
+┌──────────────────────────┐       ┌──────────────────────────────────────┐
+│   Alliance Trigger       │       │   Alliance Trigger Detection          │
+│   Detection              │       │                                       │
+│                          │       │   • Post-debate: ally was attacked    │
+│   Delayed gossip         │       │   • Outnumbered: ally was ganged up   │
+│   (2-5 min queue)        │       │   • Harsh criticism: rival got roasted│
+└──────────────────────────┘       └──────────────────────────────────────┘
 ```
 
-**Key characteristics:**
-- Personality-based "thinking" delays create realistic staggered responses
-- Messages stream completely, then appear all-at-once (iMessage-style)
-- `AbortController` tracking enables clean cancellation
+### State Management Complexity
 
-### Debate System
+The `useCounsel` hook manages:
+- Message history with 3 message types
+- 5 concurrent typing indicators with reply targets
+- Debate queue with automatic round progression
+- Pause state with coordinator-provided reasons
+- Summary generation flow
+- Memory activity tracking (searching/saving indicators)
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Automatic Debate Loop                       │
-│                                                                  │
-│   Round 1: Grandma A responds to Grandma B                       │
-│            ↓                                                     │
-│   Coordinator checks: Does anyone want to react?                 │
-│            ↓                                                     │
-│   Round 2: Grandma C jumps in defending Grandma B                │
-│            ↓                                                     │
-│   ... continues up to 5 rounds ...                               │
-│            ↓                                                     │
-│   Coordinator: "They're winding down" (shouldPause: true)        │
-│            ↓                                                     │
-│   User prompt: "Let them cook" or "Order in the council!"        │
-└─────────────────────────────────────────────────────────────────┘
-```
+The `usePrivateMessages` hook manages:
+- 5 separate conversation histories
+- Unread counts per grandma
+- Typing states for private chats
+- Proactive message triggers
+- Group chat context injection
 
-**Debate flow:**
-1. Coordinator returns `DebateInstruction[]` with responderId, targetId, reason
-2. Up to 5 automatic rounds run without user intervention
-3. After each response, coordinator checks if others want to react
-4. System respects `shouldPause` signal for natural conversation breaks
-5. User can continue debates or gavel the council to order
+The `useAllianceQueue` hook manages:
+- Delayed delivery queue with timers
+- Daily limits and cooldown tracking
+- Per-grandma cooldowns
+- Global gossip cooldowns
+- Probability-gated trigger filtering
 
-### Message Flow
+---
 
-```typescript
-// User submits question
-sendQuestion("Should I quit my job?")
+## The Grandmas
 
-// 1. Add user message to state
-// 2. Show 5 typing indicators (staggered by personality)
-// 3. Fire 5 parallel requests to /api/chat?mode=single
-// 4. Collect complete responses (no incremental display)
-// 5. Remove typing indicators, add messages with post-delays
-// 6. Call coordinator to check for debates
-// 7. If debates found, enter automatic debate loop
-// 8. On gavel, show summary prompt
-// 9. Generate meeting minutes if requested
-```
+| | Name | Background | Signature Style |
+|---|------|-----------|-----------------|
+| 💬 | **Nana Ruth** | Brooklyn teacher, 40 years | Literary references, grammar corrections, withering when challenged |
+| 🌶️ | **Abuela Carmen** | Mexico City restaurateur | Food metaphors, Spanish phrases, scorching when provoked |
+| 🌿 | **Bà Nguyen** | Saigon war survivor | Stoic brevity (1-2 sentences MAX), cutting wisdom |
+| ⛪ | **Grandma Edith** | Minnesota church organist | Passive-aggressive concern, weaponized worry |
+| 👑 | **Bibi Amara** | Lagos CEO, self-made | Strategic no-nonsense, imperious when questioned |
+
+### Relationship Web
+
+Each grandma has 4 defined relationships with the others:
+
+- **Ruth ↔ Bà**: Mutual allies (intellectual respect)
+- **Carmen ↔ Edith**: Frenemies (food vs faith tension)
+- **Bibi → Carmen**: Dismissive ("Feelings don't pay bills")
+- **Edith → Bibi**: Worried ("I pray for your work-life balance")
+- **Bà → Carmen**: Dismissive ("Survived war without empanadas")
+
+These relationships drive gossip content and alliance triggers.
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| **Framework** | Next.js 16 (App Router) | Server components, Edge runtime |
+| **UI** | React 19 | Concurrent features, transitions |
+| **Styling** | Tailwind CSS 4 | CSS-first config, glassmorphism |
+| **Animation** | Framer Motion 12 | Spring physics, gesture handling |
+| **AI** | Vercel AI SDK 6 | Streaming, tool calling |
+| **Gateway** | Vercel AI Gateway | Model routing, rate limiting |
+| **Model** | Claude Sonnet 4 | All persona and coordinator responses |
 
 ---
 
@@ -191,38 +204,24 @@ sendQuestion("Should I quit my job?")
 ### Prerequisites
 
 - Node.js 18+
-- npm or yarn
 - Vercel account (for AI Gateway access)
 
 ### Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/medelman17/grandmas.git
 cd grandmas
-
-# Install dependencies
 npm install
-
-# Set up environment variables
 cp .env.example .env.local
-# Edit .env.local with your AI Gateway key
-
-# Start development server
+# Add your AI_GATEWAY_API_KEY to .env.local
 npm run dev
 ```
 
 ### Environment Variables
 
 ```bash
-# Required: Vercel AI Gateway API Key
-AI_GATEWAY_API_KEY=your_key_here
+AI_GATEWAY_API_KEY=your_vercel_ai_gateway_key
 ```
-
-**To get your AI Gateway key:**
-1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
-2. Navigate to Settings → AI Gateway
-3. Create or copy your API key
 
 ---
 
@@ -231,35 +230,27 @@ AI_GATEWAY_API_KEY=your_key_here
 ```
 grandmas/
 ├── app/
-│   ├── api/chat/
-│   │   └── route.ts           # Main API (3 modes: single, coordinator, summary)
-│   ├── page.tsx               # Home page
-│   ├── layout.tsx             # Root layout + metadata
-│   ├── globals.css            # Dark theme, glassmorphism, animations
-│   ├── icon.tsx               # Dynamic favicon
-│   ├── apple-icon.tsx         # Apple touch icon
-│   ├── opengraph-image.tsx    # OG image for social sharing
-│   └── twitter-image.tsx      # Twitter card image
+│   ├── api/
+│   │   ├── chat/route.ts           # Main API (single, coordinator, summary, proactive-check)
+│   │   └── private-chat/route.ts   # Private messaging API (proactive, alliance modes)
+│   ├── page.tsx
+│   └── globals.css                 # Dark theme, glassmorphism, noise textures
 ├── components/
-│   ├── counsel-chat.tsx       # Main chat container
-│   ├── grandma-message.tsx    # Grandma message bubbles
-│   ├── user-message.tsx       # User message bubbles
-│   ├── chat-input.tsx         # Input + debate controls
-│   ├── council-header.tsx     # Header with avatars + debate badge
-│   ├── typing-indicators.tsx  # Animated typing status
-│   ├── summary-prompt.tsx     # Post-debate summary request
-│   └── markdown.tsx           # Markdown renderer
+│   ├── counsel-chat.tsx            # Main orchestration component
+│   ├── private-chat-modal.tsx      # Slide-in private conversation panel
+│   ├── grandma-message.tsx         # Message bubbles with quote threading
+│   └── ...
 ├── hooks/
-│   └── use-counsel.ts         # Main orchestration hook (500+ lines)
+│   ├── use-counsel.ts              # Group chat orchestration (~700 lines)
+│   ├── use-private-messages.ts     # Private chat state management (~450 lines)
+│   └── use-alliance-queue.ts       # Delayed gossip delivery (~250 lines)
 ├── lib/
-│   ├── grandmas.ts            # Persona configs + system prompts
-│   ├── types.ts               # TypeScript definitions
-│   └── utils.ts               # Utility functions
-├── public/                    # Static assets
-├── package.json
-├── tsconfig.json
-├── tailwind.config.ts
-└── next.config.ts
+│   ├── grandmas.ts                 # Personas, relationships, prompts
+│   ├── alliance-triggers.ts        # Gossip trigger detection logic
+│   ├── social-config.ts            # Timing and probability constants
+│   ├── memory.ts                   # Memory tool definitions
+│   └── types.ts                    # TypeScript definitions
+└── ...
 ```
 
 ---
@@ -268,364 +259,54 @@ grandmas/
 
 ### `POST /api/chat`
 
-**Runtime:** Edge
+| Mode | Purpose |
+|------|---------|
+| `single` | Get response from one grandma with persona-specific prompt |
+| `coordinator` | Analyze responses for disagreements, return debate instructions |
+| `summary` | Generate meeting minutes from conversation transcript |
+| `proactive-check` | Determine if grandma should reach out privately |
 
-#### Mode: `single`
+### `POST /api/private-chat`
 
-Get a response from a single grandma.
-
-```typescript
-// Request
-{
-  messages: [{ role: "user", content: "Should I quit my job?" }],
-  grandmaId: "nana-ruth",
-  mode: "single",
-  context?: {
-    replyingTo?: "abuela-carmen"  // For debate responses
-  }
-}
-
-// Response: Text stream of grandma's response
-```
-
-#### Mode: `coordinator`
-
-Analyze responses for disagreements.
-
-```typescript
-// Initial check (after all 5 respond)
-{
-  messages: [{ role: "user", content: "Original question" }],
-  mode: "coordinator",
-  context: {
-    allResponses: {
-      "nana-ruth": "Her response...",
-      "abuela-carmen": "Her response...",
-      // ... all 5
-    }
-  }
-}
-
-// Debate reaction check (after each debate message)
-{
-  messages: [{ role: "user", content: "Last debate message" }],
-  mode: "coordinator",
-  context: {
-    debateReaction: true,
-    lastSpeaker: "nana-ruth",
-    lastTarget: "abuela-carmen"
-  }
-}
-
-// Response (parsed from text stream)
-{
-  "hasDisagreement": true,
-  "debates": [
-    {
-      "responderId": "abuela-carmen",
-      "targetId": "nana-ruth",
-      "reason": "Disagrees with cold literary analysis"
-    }
-  ],
-  "shouldPause": false,
-  "pauseReason": null
-}
-```
-
-#### Mode: `summary`
-
-Generate meeting minutes.
-
-```typescript
-// Request
-{
-  messages: [],
-  mode: "summary",
-  context: {
-    conversationTranscript: "Full conversation text..."
-  }
-}
-
-// Response: Markdown-formatted meeting minutes
-```
-
----
-
-## Components
-
-### `<CounselChat />`
-
-Main chat container managing the entire conversation UI.
-
-**Responsibilities:**
-- Renders messages (user, grandma, system)
-- Handles auto-scroll with buffer for input area
-- Shows typing indicators (initial pinned, debate inline)
-- Displays summary prompt after gaveling
-- Quote preview for threaded debate replies
-
-### `<GrandmaMessage />`
-
-Individual grandma message bubble.
-
-**Props:**
-```typescript
-interface GrandmaMessageProps {
-  content: string;
-  grandmaId: GrandmaId;
-  replyingTo?: GrandmaId;        // Shows quote preview
-  replyingToContent?: string;    // Content being replied to
-  isStreaming?: boolean;         // Shows pulsing indicator
-}
-```
-
-**Features:**
-- Persona-specific avatar with gradient background
-- Glassmorphic message bubble with subtle gradient overlay
-- Optional streaming indicator ring
-- Quote preview with thread connector line
-- Markdown rendering
-
-### `<ChatInput />`
-
-Fixed bottom input area with debate controls.
-
-**Props:**
-```typescript
-interface ChatInputProps {
-  onSubmit: (question: string) => void;
-  isLoading: boolean;
-  hasMessages: boolean;
-  isDebating: boolean;
-  hasQueuedDebates: boolean;
-  debatePauseReason: string;
-  onContinueDebate: () => void;
-  onEndDebate: () => void;
-}
-```
-
-**Features:**
-- Quick prompt buttons on empty state
-- Textarea with send button
-- "Let them cook" button (amber, flame icon)
-- "Order in the council!" button (gavel icon)
-- Loading state with animated dots
-
-### `<TypingIndicators />`
-
-Shows which grandmas are currently "thinking."
-
-**Props:**
-```typescript
-interface TypingIndicatorsProps {
-  typingGrandmas: TypingState[];
-}
-```
-
-**Features:**
-- Staggered entrance animations
-- Shows reply target with arrow
-- Persona-colored bouncing dots
-- Spring physics for smooth motion
-
----
-
-## Hooks
-
-### `useCounsel()`
-
-Main orchestration hook managing all chat logic.
-
-**Returns:**
-```typescript
-{
-  // State
-  messages: CounselMessage[];
-  typingGrandmas: TypingState[];
-  isDebating: boolean;
-  isLoading: boolean;
-  debateRound: number;
-  hasQueuedDebates: boolean;
-  debatePauseReason: string;
-  showSummaryPrompt: boolean;
-  isGeneratingSummary: boolean;
-
-  // Actions
-  sendQuestion: (question: string) => Promise<void>;
-  continueDebate: () => Promise<void>;
-  endDebate: () => void;
-  requestMeetingSummary: () => Promise<void>;
-  dismissSummaryPrompt: () => void;
-  clearChat: () => void;
-}
-```
-
-**Key internal methods:**
-- `streamGrandmaResponse()` — Handles single grandma fetch with streaming
-- `checkForDebates()` — Calls coordinator after initial responses
-- `checkForDebateReaction()` — Checks if grandmas want to react
-- `runAutomaticDebates()` — Manages debate loop up to 5 rounds
-- `generateTranscript()` — Formats conversation for summary
-- `generateSummary()` — Calls summary API mode
-
----
-
-## Type Definitions
-
-```typescript
-// Grandma identifier
-type GrandmaId =
-  | "nana-ruth"
-  | "abuela-carmen"
-  | "ba-nguyen"
-  | "grandma-edith"
-  | "bibi-amara";
-
-// Message in conversation
-interface CounselMessage {
-  id: string;
-  type: "user" | "grandma" | "system";
-  content: string;
-  grandmaId?: GrandmaId;
-  replyingTo?: GrandmaId;
-  timestamp: number;
-  isStreaming?: boolean;
-}
-
-// Typing indicator state
-interface TypingState {
-  grandmaId: GrandmaId;
-  replyingTo?: GrandmaId;
-  startedAt: number;
-}
-
-// Debate instruction from coordinator
-interface DebateInstruction {
-  responderId: GrandmaId;
-  targetId: GrandmaId;
-  reason: string;
-}
-
-// Coordinator response
-interface CoordinatorResponse {
-  hasDisagreement: boolean;
-  debates: DebateInstruction[];
-  shouldPause?: boolean;
-  pauseReason?: string;
-}
-```
-
----
-
-## Styling & Theme
-
-### Dark Mode Design System
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--bg-primary` | `#0a0a0f` | Main background |
-| `--bg-secondary` | `#12121a` | Elevated surfaces |
-| `--glass-bg` | `rgba(255,255,255,0.03)` | Glassmorphic panels |
-| `--glass-border` | `rgba(255,255,255,0.08)` | Subtle borders |
-| `--text-primary` | `#f5f5f7` | Main text |
-| `--text-secondary` | `#a1a1aa` | Muted text |
-
-### Persona Colors
-
-| Grandma | Gradient | Glow |
-|---------|----------|------|
-| Nana Ruth | `purple-500 → indigo-600` | `rgba(168,85,247,0.3)` |
-| Abuela Carmen | `orange-500 → red-600` | `rgba(249,115,22,0.3)` |
-| Bà Nguyen | `emerald-500 → teal-600` | `rgba(16,185,129,0.3)` |
-| Grandma Edith | `sky-500 → blue-600` | `rgba(14,165,233,0.3)` |
-| Bibi Amara | `amber-500 → yellow-600` | `rgba(245,158,11,0.3)` |
-
-### Glassmorphism Classes
-
-```css
-.glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-subtle {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-```
-
----
-
-## Deployment
-
-### Vercel (Recommended)
-
-```bash
-# Deploy to production
-vercel --prod
-```
-
-**Required environment variables in Vercel:**
-- `AI_GATEWAY_API_KEY` — Your Vercel AI Gateway key
-
-### Build Commands
-
-```bash
-npm run dev      # Development server (localhost:3000)
-npm run build    # Production build
-npm run start    # Production server
-npm run lint     # ESLint
-```
+Handles private 1:1 conversations with context awareness:
+- `proactiveContext`: Grandma-initiated outreach with group chat reference
+- `groupChatContext`: User-initiated chat with group discussion context
+- `allianceContext`: Gossip messages about other grandmas
 
 ---
 
 ## Performance Optimizations
 
-| Optimization | Implementation |
-|--------------|----------------|
-| **Edge Runtime** | All API routes use edge for fast cold starts |
-| **Package Tree-Shaking** | `optimizePackageImports` for framer-motion |
-| **Content Visibility** | `content-visibility: auto` defers off-screen messages |
-| **Layout Stability** | `contain-intrinsic-size` prevents CLS |
-| **Batched Scrolling** | `requestAnimationFrame` for scroll updates |
-| **Non-Urgent Updates** | `startTransition` for typing indicators |
-| **Request Cancellation** | `AbortController` for clean cleanup |
+| Technique | Implementation |
+|-----------|----------------|
+| Edge Runtime | All API routes for minimal cold start |
+| Content Visibility | Off-screen messages deferred with `content-visibility: auto` |
+| Batched Updates | `requestAnimationFrame` for scroll, `startTransition` for typing |
+| Request Cancellation | `AbortController` tracking for clean cleanup |
+| Package Optimization | Tree-shaking for framer-motion via `optimizePackageImports` |
 
 ---
 
-## Contributing
+## Deployment
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+```bash
+vercel --prod
+```
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Required environment variables in Vercel dashboard:
+- `AI_GATEWAY_API_KEY`
 
-### Development with Serena (Optional)
+---
 
-This project includes configuration for [Serena](https://github.com/oraios/serena), a semantic coding MCP server that provides intelligent code navigation and editing when used with Claude Code or other MCP-compatible clients.
+## Development Tools
 
-**What's included:**
-- `.serena/project.yml` — Project configuration (TypeScript, encoding)
-- `.serena/memories/` — Knowledge base with architecture docs, conventions, commands
+This project includes configuration for:
 
-**To use Serena:**
+- **[Serena MCP](https://github.com/oraios/serena)**: Semantic code navigation and refactoring
+- **[Backlog.md MCP](https://github.com/backlog-md/backlog)**: Task management with markdown files
+- **Claude Code**: AI-assisted development with project context
 
-1. Install Serena MCP server ([installation guide](https://github.com/oraios/serena#installation))
-2. Configure it in your Claude Code MCP settings (`~/.claude/settings.json`)
-3. The project will auto-activate with stored memories when you open this repo
-
-**Benefits:**
-- Symbol-level code navigation (`find_symbol`, `get_symbols_overview`)
-- Intelligent refactoring (`replace_symbol_body`, `rename_symbol`)
-- Reference finding across the codebase
-- Persistent project knowledge across sessions
-
-> **Note:** Serena is optional. Claude Code works fine without it using CLAUDE.md for context.
+See `.serena/`, `backlog/`, and `CLAUDE.md` for configurations.
 
 ---
 
@@ -636,7 +317,9 @@ MIT License — see [LICENSE](LICENSE) for details.
 ---
 
 <p align="center">
-  <strong>Always online. Always judging.</strong>
-  <br />
+  <strong>Always online. Always judging. Sometimes gossiping.</strong>
+  <br /><br />
   <a href="https://bubbeh.vercel.app">bubbeh.vercel.app</a>
+  <br /><br />
+  Built by <a href="https://github.com/medelman17">@medelman17</a>
 </p>
