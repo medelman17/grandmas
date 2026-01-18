@@ -35,7 +35,7 @@ Return relevant memories from past conversations sorted by relevance.`,
             grandmaId,
             query,
             limit: 5,
-            minSimilarity: 0.4, // Lower threshold to catch more potentially relevant memories
+            minSimilarity: 0.25, // Low threshold to catch more potentially relevant memories
           });
 
           if (memories.length === 0) {
