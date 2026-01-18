@@ -13,6 +13,7 @@ import {
 } from "@/lib/types";
 import { GRANDMAS, GRANDMA_IDS } from "@/lib/grandmas";
 import { checkForAllianceTriggers } from "@/lib/alliance-triggers";
+import { parseMentions } from "@/lib/mention-utils";
 
 /**
  * Generate a unique ID for messages
@@ -408,11 +409,15 @@ export function useCounsel(options: UseCounselOptions = {}) {
 
   /**
    * Check for debates after all grandmas respond
+   * @param question - The user's original question
+   * @param responses - Map of grandma responses
+   * @param mentionedGrandmas - Optional list of explicitly @mentioned grandmas
    */
   const checkForDebates = useCallback(
     async (
       question: string,
-      responses: Record<GrandmaId, string>
+      responses: Record<GrandmaId, string>,
+      mentionedGrandmas?: GrandmaId[]
     ): Promise<DebateInstruction[]> => {
       try {
         const response = await fetch("/api/chat", {
@@ -421,7 +426,11 @@ export function useCounsel(options: UseCounselOptions = {}) {
           body: JSON.stringify({
             messages: [{ role: "user", content: question }],
             mode: "coordinator",
-            context: { allResponses: responses },
+            context: {
+              allResponses: responses,
+              // Pass mention context so coordinator knows who was directly addressed
+              ...(mentionedGrandmas && mentionedGrandmas.length > 0 && { mentionedGrandmas }),
+            },
           }),
         });
 
@@ -695,7 +704,7 @@ export function useCounsel(options: UseCounselOptions = {}) {
   );
 
   /**
-   * Send a question to all grandmas
+   * Send a question to all grandmas (or only mentioned grandmas if @mentions present)
    */
   const sendQuestion = useCallback(
     async (question: string) => {
@@ -707,12 +716,20 @@ export function useCounsel(options: UseCounselOptions = {}) {
       setDebateRound(0);
       setRecentDebateMessages([]);
 
-      // Add user message
+      // Parse @mentions to determine which grandmas should respond
+      const mentionedGrandmas = parseMentions(question);
+      const respondingGrandmas = mentionedGrandmas.length > 0
+        ? mentionedGrandmas
+        : GRANDMA_IDS;
+
+      // Add user message with mention metadata
       const userMessage: CounselMessage = {
         id: generateId(),
         type: "user",
         content: question,
         timestamp: Date.now(),
+        // Only include mentionedGrandmas if there are actual mentions
+        ...(mentionedGrandmas.length > 0 && { mentionedGrandmas }),
       };
       setMessages((prev) => [...prev, userMessage]);
 
@@ -726,9 +743,9 @@ export function useCounsel(options: UseCounselOptions = {}) {
         "bibi-amara": randomDelay(1800, 3600),    // Bibi Amara makes an entrance
       };
 
-      // Stagger the typing indicator appearances
+      // Stagger the typing indicator appearances (only for responding grandmas)
       // Use startTransition since these are non-urgent visual updates
-      for (const grandmaId of GRANDMA_IDS) {
+      for (const grandmaId of respondingGrandmas) {
         setTimeout(() => {
           startTransition(() => {
             setTypingGrandmas((prev) => [
@@ -750,7 +767,7 @@ export function useCounsel(options: UseCounselOptions = {}) {
       };
 
       const responsePromises: Promise<{ id: GrandmaId; content: string }>[] =
-        GRANDMA_IDS.map(async (grandmaId) => {
+        respondingGrandmas.map(async (grandmaId) => {
           // Add personality-based variance to when each grandma starts
           const delays = thinkingDelays[grandmaId];
           await new Promise((r) => setTimeout(r, randomDelay(delays.min, delays.max)));
@@ -773,8 +790,8 @@ export function useCounsel(options: UseCounselOptions = {}) {
       // Give user time to read all 5 responses before debates start
       await new Promise((r) => setTimeout(r, randomDelay(1500, 3000)));
 
-      // Check for debates
-      const rawDebates = await checkForDebates(question, responses);
+      // Check for debates (pass mention context so coordinator can suggest non-mentioned grandmas join)
+      const rawDebates = await checkForDebates(question, responses, mentionedGrandmas);
       // Filter out any invalid debates from coordinator
       const debates = rawDebates.filter(isValidDebate);
 

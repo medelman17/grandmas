@@ -1,9 +1,10 @@
 ---
 id: task-3.5.1
 title: 'ALLY-5a: useAllianceQueue Hook Foundation'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:39'
+updated_date: '2026-01-18 02:25'
 labels:
   - alliances
   - hooks

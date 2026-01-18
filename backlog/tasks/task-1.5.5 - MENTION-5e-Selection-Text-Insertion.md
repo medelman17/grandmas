@@ -1,9 +1,10 @@
 ---
 id: task-1.5.5
 title: 'MENTION-5e: Selection & Text Insertion'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:41'
+updated_date: '2026-01-18 03:43'
 labels:
   - mention-system
   - ui
@@ -24,9 +25,9 @@ Handle selection of a grandma suggestion and insert the complete @mention at the
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Click on suggestion triggers selection
-- [ ] #2 Selection replaces @partial with @grandma-id + space
-- [ ] #3 Cursor positioned after inserted mention
-- [ ] #4 Input retains focus after selection
-- [ ] #5 Works for mentions mid-text, not just at end
+- [x] #1 Click on suggestion triggers selection
+- [x] #2 Selection replaces @partial with @grandma-id + space
+- [x] #3 Cursor positioned after inserted mention
+- [x] #4 Input retains focus after selection
+- [x] #5 Works for mentions mid-text, not just at end
 <!-- AC:END -->

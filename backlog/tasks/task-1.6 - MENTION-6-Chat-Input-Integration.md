@@ -1,10 +1,10 @@
 ---
 id: task-1.6
 title: 'MENTION-6: Chat Input Integration'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:10'
-updated_date: '2026-01-18 01:13'
+updated_date: '2026-01-18 05:33'
 labels:
   - mention-system
   - ui

@@ -1,6 +1,6 @@
 import { streamText, stepCountIs } from "ai";
 import { gateway } from "@ai-sdk/gateway";
-import { GRANDMAS, DEBATE_COORDINATOR_PROMPT, MEETING_SUMMARY_PROMPT, getDebateResponsePrompt, getProactiveCheckPrompt } from "@/lib/grandmas";
+import { GRANDMAS, GRANDMA_IDS, DEBATE_COORDINATOR_PROMPT, MEETING_SUMMARY_PROMPT, getDebateResponsePrompt, getProactiveCheckPrompt } from "@/lib/grandmas";
 import { ChatRequest, GrandmaId } from "@/lib/types";
 import { createMemoryTools } from "@/lib/memory";
 import { getOrCreateUser } from "@/lib/user/store";
@@ -74,6 +74,10 @@ Would any grandma (other than ${GRANDMAS[lastSpeaker].name}) want to respond to 
         );
       }
 
+      // Check if specific grandmas were @mentioned
+      const mentionedGrandmas = context?.mentionedGrandmas as GrandmaId[] | undefined;
+      const hasMentions = mentionedGrandmas && mentionedGrandmas.length > 0;
+
       // Format the responses for analysis
       const responseSummary = Object.entries(allResponses)
         .map(([id, content]) => `${GRANDMAS[id as GrandmaId].name}: ${content}`)
@@ -81,10 +85,21 @@ Would any grandma (other than ${GRANDMAS[lastSpeaker].name}) want to respond to 
 
       const userQuestion = messages.find((m) => m.role === "user")?.content || "";
 
+      // Build mention context for the coordinator
+      const mentionContext = hasMentions
+        ? `\n\nIMPORTANT CONTEXT: The user specifically @mentioned only these grandmas: ${mentionedGrandmas.map(id => GRANDMAS[id].name).join(", ")}.
+The other grandmas (${GRANDMA_IDS.filter(id => !mentionedGrandmas.includes(id)).map(id => GRANDMAS[id].name).join(", ")}) were NOT directly addressed but are listening in.
+If the debate gets heated or touches on a non-mentioned grandma's expertise/values, she might jump in uninvited - that's drama gold!
+Consider suggesting a non-mentioned grandma join if:
+- Her core values are being attacked or dismissed
+- She has a strong opinion on the topic being debated
+- A devastating one-liner opportunity presents itself`
+        : "";
+
       // Use plain string model ID - AI SDK auto-routes through AI Gateway
       const result = streamText({
         model,
-        system: DEBATE_COORDINATOR_PROMPT,
+        system: DEBATE_COORDINATOR_PROMPT + mentionContext,
         messages: [
           {
             role: "user",
@@ -204,16 +219,16 @@ Analyze for disagreements and respond with JSON only.`,
     }
 
     // Regular response mode - with memory tools if userId is provided
-    // Validate user and get/create their record
-    let validatedUserId: string | null = null;
-    if (userId) {
-      validatedUserId = await getOrCreateUser(userId);
-    }
+    // Start user validation early (don't await yet) - async-api-routes pattern
+    const userPromise = userId ? getOrCreateUser(userId) : null;
 
-    // Add memory behavior instructions to system prompt if grandma has them
+    // Add memory behavior instructions to system prompt while user validation runs
     if (grandma.memoryBehavior) {
       systemPrompt += `\n\nMEMORY INSTRUCTIONS:\n${grandma.memoryBehavior}`;
     }
+
+    // Now await user validation (it's been running in parallel with prompt prep)
+    const validatedUserId = userPromise ? await userPromise : null;
 
     // Create memory tools if we have a valid user
     const tools = validatedUserId ? createMemoryTools(validatedUserId, grandmaId) : undefined;

@@ -1,10 +1,10 @@
 ---
 id: task-3.5
 title: 'ALLY-5: Alliance Message Queueing'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:11'
-updated_date: '2026-01-18 01:13'
+updated_date: '2026-01-18 02:25'
 labels:
   - alliances
   - hooks

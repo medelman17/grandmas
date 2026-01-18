@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, FormEvent, KeyboardEvent } from "react";
+import { useState, useRef, FormEvent, KeyboardEvent, ChangeEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useMentionAutocomplete } from "@/hooks/use-mention-autocomplete";
+import { MentionDropdown } from "./mention-dropdown";
 
 interface ChatInputProps {
   onSubmit: (question: string) => void;
@@ -165,6 +167,10 @@ export function ChatInput({
 }: ChatInputProps) {
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Mention autocomplete hook
+  const { state: autocompleteState, actions: autocompleteActions } = useMentionAutocomplete();
 
   // Hide prompts once conversation has started
   const showPrompts = !hasMessages && !isLoading;
@@ -177,13 +183,70 @@ export function ChatInput({
     if (input.trim() && !isLoading) {
       onSubmit(input.trim());
       setInput("");
+      autocompleteActions.reset();
     }
   };
 
+  // Handle input changes - update state and check for @mentions
+  const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    const cursorPosition = e.target.selectionStart ?? newValue.length;
+    setInput(newValue);
+    autocompleteActions.handleInputChange(newValue, cursorPosition);
+  };
+
+  // Handle cursor movement (clicks, arrow keys in text)
+  const handleSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+    const target = e.target as HTMLTextAreaElement;
+    const cursorPosition = target.selectionStart ?? input.length;
+    autocompleteActions.handleInputChange(input, cursorPosition);
+  };
+
+  // Handle keyboard events - autocomplete takes priority, then form submit
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    // Let autocomplete handle keys first if it's open
+    const result = autocompleteActions.handleKeyDown(e.key);
+
+    if (result.handled) {
+      e.preventDefault();
+
+      // If a selection was made, insert the mention
+      if (result.selected) {
+        const insertResult = autocompleteActions.insertMention(input, result.selected);
+        if (insertResult) {
+          setInput(insertResult.newText);
+          // Set cursor position after React updates the value
+          requestAnimationFrame(() => {
+            if (textareaRef.current) {
+              textareaRef.current.selectionStart = insertResult.newCursorPosition;
+              textareaRef.current.selectionEnd = insertResult.newCursorPosition;
+            }
+          });
+        }
+      }
+      return;
+    }
+
+    // Default Enter behavior for form submit
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
+    }
+  };
+
+  // Handle click selection from dropdown
+  const handleMentionSelect = (grandma: { id: string; name: string; emoji: string }) => {
+    const insertResult = autocompleteActions.insertMention(input, grandma as Parameters<typeof autocompleteActions.insertMention>[1]);
+    if (insertResult) {
+      setInput(insertResult.newText);
+      // Set cursor position and refocus
+      requestAnimationFrame(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.selectionStart = insertResult.newCursorPosition;
+          textareaRef.current.selectionEnd = insertResult.newCursorPosition;
+        }
+      });
     }
   };
 
@@ -297,35 +360,48 @@ export function ChatInput({
               onSubmit={handleSubmit}
               className="relative"
             >
-              <div
-                className={cn(
-                  "flex gap-3 p-1 rounded-2xl",
-                  "bg-white/[0.03] border",
-                  "transition-all duration-300",
-                  isFocused
-                    ? "border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.15)]"
-                    : "border-white/[0.08]"
-                )}
-              >
-                <textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  onFocus={() => setIsFocused(true)}
-                  onBlur={() => setIsFocused(false)}
-                  placeholder="Ask for advice..."
-                  disabled={isLoading}
-                  rows={1}
-                  className={cn(
-                    "flex-1 resize-none bg-transparent px-3 sm:px-4 py-3",
-                    "focus:outline-none",
-                    "placeholder:text-zinc-600 text-sm text-white",
-                    "transition-all duration-200",
-                    // Prevent wrapping to multiple lines on mobile
-                    "max-h-[44px] sm:max-h-32",
-                    isLoading && "opacity-50 cursor-not-allowed"
-                  )}
+              {/* Input container with relative positioning for dropdown */}
+              <div className="relative">
+                {/* Mention autocomplete dropdown - positioned above input */}
+                <MentionDropdown
+                  isOpen={autocompleteState.isOpen}
+                  suggestions={autocompleteState.filteredGrandmas}
+                  selectedIndex={autocompleteState.selectedIndex}
+                  onSelect={handleMentionSelect}
+                  onHover={autocompleteActions.setSelectedIndex}
                 />
+
+                <div
+                  className={cn(
+                    "flex gap-3 p-1 rounded-2xl",
+                    "bg-white/[0.03] border",
+                    "transition-all duration-300",
+                    isFocused
+                      ? "border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.15)]"
+                      : "border-white/[0.08]"
+                  )}
+                >
+                  <textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={handleInputChange}
+                    onSelect={handleSelect}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    placeholder="Ask for advice... (use @ to mention a grandma)"
+                    disabled={isLoading}
+                    rows={1}
+                    className={cn(
+                      "flex-1 resize-none bg-transparent px-3 sm:px-4 py-3",
+                      "focus:outline-none",
+                      "placeholder:text-zinc-600 text-sm text-white",
+                      "transition-all duration-200",
+                      // Prevent wrapping to multiple lines on mobile
+                      "max-h-[44px] sm:max-h-32",
+                      isLoading && "opacity-50 cursor-not-allowed"
+                    )}
+                  />
                 <motion.button
                   type="submit"
                   disabled={!input.trim() || isLoading}
@@ -362,6 +438,7 @@ export function ChatInput({
                     </>
                   )}
                 </motion.button>
+                </div>
               </div>
             </motion.form>
           )}

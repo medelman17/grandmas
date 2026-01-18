@@ -1,10 +1,10 @@
 ---
 id: task-1.5
 title: 'MENTION-5: Autocomplete UI Component'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:10'
-updated_date: '2026-01-18 01:13'
+updated_date: '2026-01-18 03:43'
 labels:
   - mention-system
   - ui
@@ -24,10 +24,10 @@ Create the mention autocomplete dropdown component that appears when users type 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Dropdown appears when user types @
-- [ ] #2 Filters suggestions as user continues typing
-- [ ] #3 Arrow keys navigate suggestions
-- [ ] #4 Tab/Enter selects suggestion, Escape dismisses
-- [ ] #5 Click on suggestion inserts mention
-- [ ] #6 Shows grandma emoji, name, and @id for each suggestion
+- [x] #1 Dropdown appears when user types @
+- [x] #2 Filters suggestions as user continues typing
+- [x] #3 Arrow keys navigate suggestions
+- [x] #4 Tab/Enter selects suggestion, Escape dismisses
+- [x] #5 Click on suggestion inserts mention
+- [x] #6 Shows grandma emoji, name, and @id for each suggestion
 <!-- AC:END -->

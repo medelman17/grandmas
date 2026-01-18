@@ -1,9 +1,10 @@
 ---
 id: task-3.5.2
 title: 'ALLY-5b: Timer Logic with Random Delays'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:39'
+updated_date: '2026-01-18 02:25'
 labels:
   - alliances
   - hooks

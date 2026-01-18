@@ -1,10 +1,10 @@
 ---
 id: task-1.3
 title: 'MENTION-3: Hook Changes for Mention Filtering'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:10'
-updated_date: '2026-01-18 01:13'
+updated_date: '2026-01-18 03:32'
 labels:
   - mention-system
   - hooks
@@ -23,8 +23,8 @@ Update sendQuestion in use-counsel.ts to parse mentions and filter which grandma
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 sendQuestion calls parseMentions() on input
-- [ ] #2 Only mentioned grandmas respond if mentions present
-- [ ] #3 All 5 grandmas respond if no mentions (current behavior preserved)
-- [ ] #4 User message includes mentionedGrandmas metadata
+- [x] #1 sendQuestion calls parseMentions() on input
+- [x] #2 Only mentioned grandmas respond if mentions present
+- [x] #3 All 5 grandmas respond if no mentions (current behavior preserved)
+- [x] #4 User message includes mentionedGrandmas metadata
 <!-- AC:END -->
