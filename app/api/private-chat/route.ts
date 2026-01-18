@@ -153,6 +153,10 @@ export async function POST(req: Request) {
 
     const grandma = GRANDMAS[grandmaId];
 
+    // Start user validation early (don't await yet) - async-api-routes pattern
+    // This runs in parallel with prompt generation below
+    const userPromise = userId ? getOrCreateUser(userId) : null;
+
     // Determine which system prompt to use based on context type
     let systemPrompt: string;
     if (allianceContext) {
@@ -169,16 +173,13 @@ export async function POST(req: Request) {
       systemPrompt = getPrivateChatPrompt(grandmaId, proactiveContext, groupChatContext);
     }
 
-    // Validate user and get/create their record
-    let validatedUserId: string | null = null;
-    if (userId) {
-      validatedUserId = await getOrCreateUser(userId);
-    }
-
     // Add memory behavior instructions if grandma has them
     if (grandma.memoryBehavior) {
       systemPrompt += `\n\nMEMORY INSTRUCTIONS:\n${grandma.memoryBehavior}`;
     }
+
+    // Now await user validation (it's been running in parallel with prompt prep)
+    const validatedUserId = userPromise ? await userPromise : null;
 
     // Create memory tools if we have a valid user
     const tools = validatedUserId ? createMemoryTools(validatedUserId, grandmaId) : undefined;

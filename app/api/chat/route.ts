@@ -204,16 +204,16 @@ Analyze for disagreements and respond with JSON only.`,
     }
 
     // Regular response mode - with memory tools if userId is provided
-    // Validate user and get/create their record
-    let validatedUserId: string | null = null;
-    if (userId) {
-      validatedUserId = await getOrCreateUser(userId);
-    }
+    // Start user validation early (don't await yet) - async-api-routes pattern
+    const userPromise = userId ? getOrCreateUser(userId) : null;
 
-    // Add memory behavior instructions to system prompt if grandma has them
+    // Add memory behavior instructions to system prompt while user validation runs
     if (grandma.memoryBehavior) {
       systemPrompt += `\n\nMEMORY INSTRUCTIONS:\n${grandma.memoryBehavior}`;
     }
+
+    // Now await user validation (it's been running in parallel with prompt prep)
+    const validatedUserId = userPromise ? await userPromise : null;
 
     // Create memory tools if we have a valid user
     const tools = validatedUserId ? createMemoryTools(validatedUserId, grandmaId) : undefined;
