@@ -23,9 +23,9 @@ export interface PartialMention {
 }
 
 /**
- * Regex pattern that matches @mentions for all grandma IDs
+ * Regex pattern that matches exact @mentions for grandma IDs
  * Built dynamically from GRANDMA_IDS for maintainability
- * Matches case-insensitively: @nana-ruth, @Nana-Ruth, @NANA-RUTH, etc.
+ * Used for rendering badges where we need exact matches
  */
 export const MENTION_PATTERN = new RegExp(
   `@(${GRANDMA_IDS.join("|")})`,
@@ -33,7 +33,64 @@ export const MENTION_PATTERN = new RegExp(
 );
 
 /**
+ * Regex pattern that captures any @word for fuzzy matching
+ * Matches @word patterns where word is alphanumeric with hyphens
+ * Must be followed by word boundary (space, punctuation, or end of string)
+ */
+export const FUZZY_MENTION_PATTERN = /@([a-zA-Z][a-zA-Z0-9-]*)(?=\s|[.,!?;:]|$)/g;
+
+/**
+ * Resolve a partial mention to the best matching grandma ID
+ * Uses the same logic as autocomplete filtering
+ *
+ * @param partial - The text after @ (e.g., "abuela" from "@abuela")
+ * @returns The matching GrandmaId or null if no match
+ */
+export function resolvePartialMention(partial: string): GrandmaId | null {
+  const normalizedPartial = partial.toLowerCase();
+
+  // First try exact ID match
+  if (GRANDMA_IDS.includes(normalizedPartial as GrandmaId)) {
+    return normalizedPartial as GrandmaId;
+  }
+
+  // Then try fuzzy matching (same logic as filterGrandmasByPartial)
+  const matches = GRANDMA_IDS.filter((id) => {
+    const grandma = GRANDMAS[id];
+    const normalizedName = grandma.name.toLowerCase();
+    // Match if partial is found in ID or display name
+    return (
+      id.includes(normalizedPartial) || normalizedName.includes(normalizedPartial)
+    );
+  });
+
+  // Return first match if exactly one, or null if ambiguous/none
+  // If multiple matches, prefer exact prefix match on ID
+  if (matches.length === 1) {
+    return matches[0];
+  }
+
+  if (matches.length > 1) {
+    // Prefer ID that starts with the partial
+    const prefixMatch = matches.find((id) => id.startsWith(normalizedPartial));
+    if (prefixMatch) return prefixMatch;
+
+    // Or name that starts with the partial
+    const nameMatch = matches.find((id) =>
+      GRANDMAS[id].name.toLowerCase().startsWith(normalizedPartial)
+    );
+    if (nameMatch) return nameMatch;
+
+    // Fall back to first match
+    return matches[0];
+  }
+
+  return null;
+}
+
+/**
  * Parse all @mentions from text and return unique grandma IDs
+ * Supports both exact matches (@abuela-carmen) and fuzzy matches (@abuela)
  *
  * @param text - The text to parse for mentions
  * @returns Array of unique GrandmaId values found in the text
@@ -43,18 +100,25 @@ export const MENTION_PATTERN = new RegExp(
  * // Returns: ["nana-ruth", "abuela-carmen"]
  *
  * @example
- * parseMentions("@ba-nguyen @ba-nguyen please help")
- * // Returns: ["ba-nguyen"] (deduped)
+ * parseMentions("Hi @abuela what's up") // fuzzy match
+ * // Returns: ["abuela-carmen"]
+ *
+ * @example
+ * parseMentions("@ba @ba please help")
+ * // Returns: ["ba-nguyen"] (deduped, fuzzy matched)
  */
 export function parseMentions(text: string): GrandmaId[] {
-  const matches = text.matchAll(MENTION_PATTERN);
   const ids = new Set<GrandmaId>();
 
+  // Use fuzzy pattern to capture all @mentions
+  const matches = text.matchAll(FUZZY_MENTION_PATTERN);
+
   for (const match of matches) {
-    // match[1] is the captured group (the ID without @)
-    // Normalize to lowercase since GrandmaId is lowercase
-    const id = match[1].toLowerCase() as GrandmaId;
-    ids.add(id);
+    const partial = match[1];
+    const resolved = resolvePartialMention(partial);
+    if (resolved) {
+      ids.add(resolved);
+    }
   }
 
   return Array.from(ids);

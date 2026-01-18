@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { GRANDMAS } from "@/lib/grandmas";
-import { MENTION_PATTERN, parseMentions } from "@/lib/mention-utils";
+import { FUZZY_MENTION_PATTERN, parseMentions, resolvePartialMention } from "@/lib/mention-utils";
 import { GrandmaId } from "@/lib/types";
 
 interface UserMessageProps {
@@ -40,19 +40,23 @@ function MentionBadge({ grandmaId }: { grandmaId: GrandmaId }) {
 /**
  * Parses content and renders @mentions as styled badges
  * Returns an array of React nodes (text segments and badge components)
+ * Supports fuzzy matching (e.g., @abuela matches Abuela Carmen)
  */
 function renderContentWithMentions(content: string): React.ReactNode[] {
   const result: React.ReactNode[] = [];
   let lastIndex = 0;
   let key = 0;
 
-  // Use matchAll to find all mentions with their positions
-  const matches = content.matchAll(new RegExp(MENTION_PATTERN.source, "gi"));
+  // Use fuzzy pattern to find all @mentions with their positions
+  const matches = content.matchAll(new RegExp(FUZZY_MENTION_PATTERN.source, "gi"));
 
   for (const match of matches) {
     const mentionStart = match.index!;
     const mentionEnd = mentionStart + match[0].length;
-    const grandmaId = match[1].toLowerCase() as GrandmaId;
+    const partial = match[1];
+
+    // Resolve the partial mention to a grandma ID
+    const grandmaId = resolvePartialMention(partial);
 
     // Add text before this mention
     if (mentionStart > lastIndex) {
@@ -61,8 +65,13 @@ function renderContentWithMentions(content: string): React.ReactNode[] {
       );
     }
 
-    // Add the mention badge
-    result.push(<MentionBadge key={key++} grandmaId={grandmaId} />);
+    // Add the mention badge if resolved, otherwise keep as plain text
+    if (grandmaId) {
+      result.push(<MentionBadge key={key++} grandmaId={grandmaId} />);
+    } else {
+      // Unresolved mention - render as plain text
+      result.push(<span key={key++}>{content.slice(mentionStart, mentionEnd)}</span>);
+    }
 
     lastIndex = mentionEnd;
   }
