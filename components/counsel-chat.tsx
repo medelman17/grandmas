@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import { useCounsel } from "@/hooks/use-counsel";
 import { usePrivateMessages } from "@/hooks/use-private-messages";
@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { GrandmaId } from "@/lib/types";
 import { Markdown } from "./markdown";
 import { SummaryPrompt } from "./summary-prompt";
+import { ScrollToBottomButton } from "./scroll-to-bottom-button";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -76,6 +77,35 @@ export function CounselChat() {
   } = usePrivateMessages(userId);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+
+  /**
+   * Check if scroll position is near the bottom of the container.
+   * Uses a threshold of 100px to account for small variations.
+   */
+  const checkIfAtBottom = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return true;
+    const threshold = 100;
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    return distanceFromBottom < threshold;
+  }, []);
+
+  /**
+   * Handle scroll events to track user scroll position.
+   */
+  const handleScroll = useCallback(() => {
+    setIsAtBottom(checkIfAtBottom());
+  }, [checkIfAtBottom]);
+
+  /**
+   * Scroll to the bottom of the messages container.
+   */
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    setIsAtBottom(true);
+  }, []);
 
   /**
    * Find the most recent message from a specific grandma before a given index.
@@ -95,15 +125,18 @@ export function CounselChat() {
     [messages]
   );
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll to bottom on new messages, but only if user hasn't scrolled up
   // Use requestAnimationFrame to batch scroll updates when multiple state changes
   // happen in quick succession (e.g., 5 typing indicators appearing)
   useEffect(() => {
+    // Only auto-scroll if user is already at the bottom
+    if (!isAtBottom) return;
+
     const frame = requestAnimationFrame(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     });
     return () => cancelAnimationFrame(frame);
-  }, [messages, typingGrandmas, memoryActivities]);
+  }, [messages, typingGrandmas, memoryActivities, isAtBottom]);
 
   return (
     <div className="flex flex-col min-h-screen h-[100dvh] ambient-gradient relative noise-overlay">
@@ -115,7 +148,11 @@ export function CounselChat() {
       />
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto">
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto relative"
+      >
         <div className="max-w-2xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-4 space-y-3 sm:space-y-4">
           {/* Empty state */}
           {messages.length === 0 && (
@@ -250,6 +287,12 @@ export function CounselChat() {
           {/* Scroll anchor with buffer space for input area */}
           <div ref={messagesEndRef} className="h-24" />
         </div>
+
+        {/* Scroll to bottom button - appears when user scrolls up */}
+        <ScrollToBottomButton
+          visible={!isAtBottom && messages.length > 0}
+          onClick={scrollToBottom}
+        />
       </div>
 
       {/* Initial typing/memory indicators - pinned above input */}
