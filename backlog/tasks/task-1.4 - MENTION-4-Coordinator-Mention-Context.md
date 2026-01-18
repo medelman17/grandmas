@@ -1,10 +1,10 @@
 ---
 id: task-1.4
 title: 'MENTION-4: Coordinator Mention Context'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:10'
-updated_date: '2026-01-18 01:13'
+updated_date: '2026-01-18 03:35'
 labels:
   - mention-system
   - api
@@ -24,7 +24,7 @@ Pass mention context to the debate coordinator so it can intelligently suggest n
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 checkForDebates() accepts optional mentionedGrandmas parameter
-- [ ] #2 API route passes mention context to coordinator prompt
-- [ ] #3 Coordinator can suggest non-mentioned grandmas join debates
+- [x] #1 checkForDebates() accepts optional mentionedGrandmas parameter
+- [x] #2 API route passes mention context to coordinator prompt
+- [x] #3 Coordinator can suggest non-mentioned grandmas join debates
 <!-- AC:END -->

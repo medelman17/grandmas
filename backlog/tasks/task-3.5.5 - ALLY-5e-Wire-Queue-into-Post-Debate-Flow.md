@@ -1,9 +1,10 @@
 ---
 id: task-3.5.5
 title: 'ALLY-5e: Wire Queue into Post-Debate Flow'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:39'
+updated_date: '2026-01-18 02:25'
 labels:
   - alliances
   - integration

@@ -1,10 +1,10 @@
 ---
 id: task-1.2
 title: 'MENTION-2: Mention Parsing Utilities'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:10'
-updated_date: '2026-01-18 01:13'
+updated_date: '2026-01-18 03:30'
 labels:
   - mention-system
   - utilities
@@ -23,8 +23,8 @@ Create utilities for parsing @mentions from text and filtering grandmas for auto
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 MENTION_PATTERN regex matches all 5 grandma IDs case-insensitively
-- [ ] #2 parseMentions(text) returns unique GrandmaId array
-- [ ] #3 getPartialMention(text, cursor) detects incomplete mentions for autocomplete
-- [ ] #4 filterGrandmasByPartial(partial) filters grandmas by ID or name match
+- [x] #1 MENTION_PATTERN regex matches all 5 grandma IDs case-insensitively
+- [x] #2 parseMentions(text) returns unique GrandmaId array
+- [x] #3 getPartialMention(text, cursor) detects incomplete mentions for autocomplete
+- [x] #4 filterGrandmasByPartial(partial) filters grandmas by ID or name match
 <!-- AC:END -->

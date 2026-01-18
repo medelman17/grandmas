@@ -106,6 +106,8 @@ export interface CounselMessage {
   replyingTo?: GrandmaId;
   timestamp: number;
   isStreaming?: boolean;
+  /** Grandmas explicitly @-mentioned in this message (user messages only) */
+  mentionedGrandmas?: GrandmaId[];
 }
 
 /**
@@ -146,6 +148,8 @@ export interface ChatRequest {
     conversationTranscript?: string;
     // For proactive message checking
     recentGroupMessages?: string;
+    // For @-mention filtering - only these grandmas should respond
+    mentionedGrandmas?: GrandmaId[];
   };
 }
 

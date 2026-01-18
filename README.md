@@ -41,6 +41,7 @@ This project demonstrates solutions to several non-trivial engineering challenge
 | **Multi-agent coordination** | Coordinator AI analyzes all responses for disagreements, triggers debate chains up to 5 rounds automatically |
 | **Persistent memory** | Per-user memory storage with grandma-specific recall patterns (Bà Nguyen remembers silently, Abuela Carmen references recipes) |
 | **Social dynamics simulation** | 20 inter-grandma relationships drive gossip triggers, alliance formation, and rivalry behaviors |
+| **@Mention targeting** | Autocomplete UI with keyboard navigation, partial text filtering, cursor-aware trigger detection |
 | **Real-time state management** | Complex state machine handling typing indicators, debate queues, proactive messaging, and alliance timers simultaneously |
 | **Edge-optimized streaming** | Custom data stream parsing for tool events (memory operations) interleaved with text generation |
 
@@ -61,6 +62,9 @@ This project demonstrates solutions to several non-trivial engineering challenge
 
 ### Multi-Agent Parallel Responses
 Five grandmas respond simultaneously with personality-driven timing. Abuela Carmen fires off quick, passionate takes while Bibi Amara takes her time crafting strategic advice.
+
+### @Mention Targeting
+Type `@` to open an autocomplete dropdown and direct questions to specific grandmas. Only mentioned grandmas respond initially, though others may jump in if debates get heated or their expertise is challenged. Mentions render as styled badges with each grandma's colors and emoji.
 
 ### Intelligent Debate System
 A coordinator AI detects disagreements and known tension points, triggering realistic back-and-forth arguments. The system respects natural conversation flow with `shouldPause` signals.
@@ -243,12 +247,14 @@ grandmas/
 ├── hooks/
 │   ├── use-counsel.ts              # Group chat orchestration (~700 lines)
 │   ├── use-private-messages.ts     # Private chat state management (~450 lines)
-│   └── use-alliance-queue.ts       # Delayed gossip delivery (~250 lines)
+│   ├── use-alliance-queue.ts       # Delayed gossip delivery (~250 lines)
+│   └── use-mention-autocomplete.ts # @mention autocomplete state management
 ├── lib/
 │   ├── grandmas.ts                 # Personas, relationships, prompts
 │   ├── alliance-triggers.ts        # Gossip trigger detection logic
 │   ├── social-config.ts            # Timing and probability constants
 │   ├── memory.ts                   # Memory tool definitions
+│   ├── mention-utils.ts            # @mention parsing and filtering
 │   └── types.ts                    # TypeScript definitions
 └── ...
 ```

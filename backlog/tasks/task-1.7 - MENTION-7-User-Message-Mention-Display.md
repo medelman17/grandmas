@@ -1,10 +1,10 @@
 ---
 id: task-1.7
 title: 'MENTION-7: User Message Mention Display'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:10'
-updated_date: '2026-01-18 01:13'
+updated_date: '2026-01-18 05:34'
 labels:
   - mention-system
   - ui

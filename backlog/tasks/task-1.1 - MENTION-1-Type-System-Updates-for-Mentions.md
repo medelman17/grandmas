@@ -1,9 +1,10 @@
 ---
 id: task-1.1
 title: 'MENTION-1: Type System Updates for Mentions'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:10'
+updated_date: '2026-01-18 02:26'
 labels:
   - mention-system
   - types
@@ -21,7 +22,7 @@ Add mention tracking fields to core types to support the @mention feature throug
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 mentionedGrandmas?: GrandmaId[] added to CounselMessage interface
-- [ ] #2 mentionedGrandmas?: GrandmaId[] added to ChatRequest.context
-- [ ] #3 TypeScript compiles without errors
+- [x] #1 mentionedGrandmas?: GrandmaId[] added to CounselMessage interface
+- [x] #2 mentionedGrandmas?: GrandmaId[] added to ChatRequest.context
+- [x] #3 TypeScript compiles without errors
 <!-- AC:END -->

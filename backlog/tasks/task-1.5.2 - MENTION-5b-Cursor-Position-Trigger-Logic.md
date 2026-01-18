@@ -1,9 +1,10 @@
 ---
 id: task-1.5.2
 title: 'MENTION-5b: Cursor Position & @ Trigger Logic'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:41'
+updated_date: '2026-01-18 03:39'
 labels:
   - mention-system
   - ui
@@ -23,8 +24,8 @@ Implement cursor position tracking and detection of @ character to trigger autoc
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Track cursor position via selectionStart
-- [ ] #2 Detect @ typed and open autocomplete
-- [ ] #3 Extract partial text after @ for filtering (e.g., '@abu' → 'abu')
-- [ ] #4 Close autocomplete if cursor moves before @
+- [x] #1 Track cursor position via selectionStart
+- [x] #2 Detect @ typed and open autocomplete
+- [x] #3 Extract partial text after @ for filtering (e.g., '@abu' → 'abu')
+- [x] #4 Close autocomplete if cursor moves before @
 <!-- AC:END -->
