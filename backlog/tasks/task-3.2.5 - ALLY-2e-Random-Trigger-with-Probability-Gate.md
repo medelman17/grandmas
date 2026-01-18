@@ -1,9 +1,10 @@
 ---
 id: task-3.2.5
 title: 'ALLY-2e: Random Trigger with Probability Gate'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:39'
+updated_date: '2026-01-18 01:46'
 labels:
   - alliances
   - logic

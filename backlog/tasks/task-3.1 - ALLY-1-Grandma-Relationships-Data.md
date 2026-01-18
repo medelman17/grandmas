@@ -1,9 +1,10 @@
 ---
 id: task-3.1
 title: 'ALLY-1: Grandma Relationships Data'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:11'
+updated_date: '2026-01-18 01:44'
 labels:
   - alliances
   - data

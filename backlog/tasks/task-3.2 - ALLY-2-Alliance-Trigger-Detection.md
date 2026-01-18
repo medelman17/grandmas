@@ -1,10 +1,10 @@
 ---
 id: task-3.2
 title: 'ALLY-2: Alliance Trigger Detection'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:11'
-updated_date: '2026-01-18 01:13'
+updated_date: '2026-01-18 01:46'
 labels:
   - alliances
   - logic

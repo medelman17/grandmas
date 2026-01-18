@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useCounsel, UseCounselOptions } from "@/hooks/use-counsel";
 import { usePrivateMessages } from "@/hooks/use-private-messages";
+import { useAllianceQueue } from "@/hooks/use-alliance-queue";
 import { useUserId } from "@/hooks/use-user-id";
 import { CouncilHeader } from "./council-header";
 import { PrivateChatModal } from "./private-chat-modal";
@@ -14,7 +15,7 @@ import { MemoryIndicators } from "./memory-indicator";
 import { ChatInput } from "./chat-input";
 import { GRANDMA_IDS, GRANDMAS } from "@/lib/grandmas";
 import { cn } from "@/lib/utils";
-import { GrandmaId, CounselMessage } from "@/lib/types";
+import { GrandmaId, CounselMessage, AllianceTrigger } from "@/lib/types";
 import { Markdown } from "./markdown";
 import { SummaryPrompt } from "./summary-prompt";
 import { ScrollToBottomButton } from "./scroll-to-bottom-button";
@@ -68,6 +69,7 @@ export function CounselChat() {
     closePrivateChat,
     sendPrivateMessage,
     triggerProactiveMessage,
+    triggerAllianceMessage,
   } = usePrivateMessages(privateMessagesOptions);
 
   // Create proactive message callback
@@ -80,13 +82,38 @@ export function CounselChat() {
     [triggerProactiveMessage]
   );
 
+  // Alliance gossip delivery callback - called when a queued alliance message is ready
+  // Uses the dedicated triggerAllianceMessage function from the private messages hook
+  const deliverAllianceGossip = useCallback(
+    async (trigger: AllianceTrigger) => {
+      console.log(
+        `[CounselChat] Delivering alliance gossip from ${trigger.fromGrandma} about ${trigger.aboutGrandma}`
+      );
+      await triggerAllianceMessage(trigger);
+    },
+    [triggerAllianceMessage]
+  );
+
+  // Alliance queue hook - manages delayed delivery of gossip messages
+  const { addTriggers: addAllianceTriggers } = useAllianceQueue(deliverAllianceGossip);
+
+  // Create alliance triggers callback for useCounsel
+  const handleAllianceTriggers = useCallback(
+    (triggers: AllianceTrigger[]) => {
+      console.log(`[CounselChat] Received ${triggers.length} alliance trigger(s)`);
+      addAllianceTriggers(triggers);
+    },
+    [addAllianceTriggers]
+  );
+
   // Memoize counsel options to prevent unnecessary hook re-runs
   const counselOptions = useMemo<UseCounselOptions>(
     () => ({
       userId,
       onProactiveMessageTrigger: handleProactiveMessageTrigger,
+      onAllianceTriggers: handleAllianceTriggers,
     }),
-    [userId, handleProactiveMessageTrigger]
+    [userId, handleProactiveMessageTrigger, handleAllianceTriggers]
   );
 
   const {

@@ -9,8 +9,10 @@ import {
   CoordinatorResponse,
   MemoryActivity,
   ProactiveCheckResponse,
+  AllianceTrigger,
 } from "@/lib/types";
 import { GRANDMAS, GRANDMA_IDS } from "@/lib/grandmas";
+import { checkForAllianceTriggers } from "@/lib/alliance-triggers";
 
 /**
  * Generate a unique ID for messages
@@ -125,6 +127,11 @@ export interface UseCounselOptions {
     groupTranscript: string,
     reason: string
   ) => void;
+  /**
+   * Callback when alliance gossip triggers are detected after a debate
+   * Called with an array of triggers that should be queued for delayed delivery
+   */
+  onAllianceTriggers?: (triggers: AllianceTrigger[]) => void;
 }
 
 /**
@@ -132,7 +139,7 @@ export interface UseCounselOptions {
  * @param options - Hook configuration options
  */
 export function useCounsel(options: UseCounselOptions = {}) {
-  const { userId, onProactiveMessageTrigger } = options;
+  const { userId, onProactiveMessageTrigger, onAllianceTriggers } = options;
   const [messages, setMessages] = useState<CounselMessage[]>([]);
   const [typingGrandmas, setTypingGrandmas] = useState<TypingState[]>([]);
   const [isDebating, setIsDebating] = useState(false);
@@ -667,14 +674,24 @@ export function useCounsel(options: UseCounselOptions = {}) {
         setDebateQueue([]);
         setDebatePauseReason("");
 
-        // Debates concluded naturally - great time for proactive outreach check
+        // Debates concluded naturally - check for alliance triggers and proactive outreach
         // Small delay to let state settle before checking
         setTimeout(() => {
+          // Check for alliance gossip opportunities based on the debate
+          if (onAllianceTriggers) {
+            const allianceTriggers = checkForAllianceTriggers(messagesRef.current);
+            if (allianceTriggers.length > 0) {
+              console.log(`[Alliance] Detected ${allianceTriggers.length} trigger(s) after debate`);
+              onAllianceTriggers(allianceTriggers);
+            }
+          }
+
+          // Also check for proactive outreach
           runProactiveChecks(messagesRef.current);
         }, 500);
       }
     },
-    [streamGrandmaResponse, checkForDebateReaction, runProactiveChecks]
+    [streamGrandmaResponse, checkForDebateReaction, runProactiveChecks, onAllianceTriggers]
   );
 
   /**

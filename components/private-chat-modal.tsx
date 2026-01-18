@@ -147,13 +147,25 @@ function MessageBubble({
           isUser
             ? "rounded-br-sm bg-gradient-to-br from-zinc-700 to-zinc-800 text-zinc-100"
             : cn(
-                "rounded-bl-sm bg-white/[0.03] border border-white/[0.06]",
+                "rounded-bl-sm",
+                // Alliance messages get a subtle secret styling
+                message.isAlliance
+                  ? "bg-gradient-to-br from-purple-500/10 to-fuchsia-500/10 border border-purple-500/20"
+                  : "bg-white/[0.03] border border-white/[0.06]",
                 grandma.colors.text
               )
         )}
       >
-        {/* Proactive message indicator */}
-        {message.isProactive && !isUser && (
+        {/* Alliance gossip indicator */}
+        {message.isAlliance && !isUser && (
+          <div className="text-[10px] text-purple-400 mb-1.5 flex items-center gap-1">
+            <span>🤫</span>
+            <span className="font-medium">Secret</span>
+          </div>
+        )}
+
+        {/* Proactive message indicator (only show if not alliance) */}
+        {message.isProactive && !message.isAlliance && !isUser && (
           <div className="text-[10px] text-zinc-500 mb-1 flex items-center gap-1">
             <span>💭</span>
             <span>reached out to you</span>

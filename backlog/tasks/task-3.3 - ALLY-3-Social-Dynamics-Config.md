@@ -1,9 +1,10 @@
 ---
 id: task-3.3
 title: 'ALLY-3: Social Dynamics Config'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-18 01:11'
+updated_date: '2026-01-18 01:45'
 labels:
   - alliances
   - rivalries
