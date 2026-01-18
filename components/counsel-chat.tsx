@@ -348,8 +348,8 @@ export function CounselChat() {
             </div>
           )}
 
-          {/* Scroll anchor with buffer space for input area */}
-          <div ref={messagesEndRef} className="h-24" />
+          {/* Scroll anchor */}
+          <div ref={messagesEndRef} className="h-4" />
         </div>
 
         {/* Scroll to bottom button - appears when user scrolls up */}
