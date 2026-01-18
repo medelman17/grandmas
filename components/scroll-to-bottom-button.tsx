@@ -36,13 +36,14 @@ export function ScrollToBottomButton({ visible, onClick }: ScrollToBottomButtonP
           exit={{ opacity: 0, y: 10, scale: 0.9 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
           onClick={onClick}
-          className="absolute bottom-32 left-1/2 -translate-x-1/2 z-10
-            flex items-center gap-1.5 px-3 py-1.5
-            bg-zinc-800/90 hover:bg-zinc-700/90
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10
+            flex items-center gap-1.5 px-3 py-2
+            bg-zinc-800/95 hover:bg-zinc-700/95 active:bg-zinc-600/95
             border border-white/10 hover:border-white/20
             rounded-full shadow-lg backdrop-blur-sm
             text-zinc-300 hover:text-white text-sm
-            transition-colors cursor-pointer"
+            transition-colors cursor-pointer
+            touch-manipulation"
           aria-label="Scroll to bottom"
         >
           <ChevronDownIcon className="w-4 h-4" />

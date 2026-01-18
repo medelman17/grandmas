@@ -13,7 +13,7 @@ interface CouncilHeaderProps {
 
 export function CouncilHeader({ isDebating, unreadCounts, onGrandmaClick }: CouncilHeaderProps) {
   return (
-    <div className="border-b border-white/5 bg-white/[0.02] backdrop-blur-xl">
+    <div className="border-b border-white/5 bg-zinc-900/95 backdrop-blur-xl">
       <div className="max-w-2xl mx-auto px-4 py-3">
         {/* Compact header row */}
         <div className="flex items-center justify-between gap-2 sm:gap-4">

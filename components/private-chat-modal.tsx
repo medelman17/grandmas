@@ -266,12 +266,8 @@ export function PrivateChatModal({
     }
   }, [conversation?.messages.length, conversation?.isTyping]);
 
-  // Focus input when modal opens
-  useEffect(() => {
-    if (grandmaId && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [grandmaId]);
+  // Note: Removed auto-focus on modal open to prevent keyboard
+  // from appearing unexpectedly on mobile devices
 
   // Handle escape key
   useEffect(() => {
